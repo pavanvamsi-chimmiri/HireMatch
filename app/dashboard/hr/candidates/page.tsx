@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { searchCandidates } from "@/lib/hr/queries";
 import { Badge } from "@/components/ui/badge";
@@ -72,41 +73,44 @@ export default async function CandidateSearchPage({
           </Card>
         ) : (
           candidates.map((candidate) => (
-            <Card
+            <Link
               key={candidate.id}
-              className="border-border/50 transition-all hover:border-blue-500/30 hover:shadow-md"
+              href={`/dashboard/hr/candidates/${candidate.id}`}
             >
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {candidate.name ?? "Unnamed Candidate"}
-                </CardTitle>
-                <CardDescription>{candidate.email}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {candidate.candidateProfile?.headline && (
-                  <p className="text-sm">
-                    {candidate.candidateProfile.headline}
+              <Card className="border-border/50 h-full transition-all hover:border-blue-500/30 hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {candidate.name ?? "Unnamed Candidate"}
+                  </CardTitle>
+                  <CardDescription>{candidate.email}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {candidate.candidateProfile?.headline && (
+                    <p className="text-sm">
+                      {candidate.candidateProfile.headline}
+                    </p>
+                  )}
+
+                  {candidate.candidateProfile?.skills.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {candidate.candidateProfile.skills
+                        .slice(0, 6)
+                        .map((skill) => (
+                          <Badge key={skill} variant="secondary">
+                            {skill}
+                          </Badge>
+                        ))}
+                    </div>
+                  ) : null}
+
+                  <p className="text-muted-foreground text-xs">
+                    {candidate.applications.length} application
+                    {candidate.applications.length === 1 ? "" : "s"} to your
+                    jobs
                   </p>
-                )}
-
-                {candidate.candidateProfile?.skills.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {candidate.candidateProfile.skills
-                      .slice(0, 6)
-                      .map((skill) => (
-                        <Badge key={skill} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                  </div>
-                ) : null}
-
-                <p className="text-muted-foreground text-xs">
-                  {candidate.applications.length} application
-                  {candidate.applications.length === 1 ? "" : "s"} to your jobs
-                </p>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))
         )}
       </div>

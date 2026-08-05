@@ -1,6 +1,9 @@
 import type { ApplicationStatus, JobStatus } from "@prisma/client";
+import { canHRAccessCandidate } from "@/lib/hr/candidate-access";
 import { prisma } from "@/lib/prisma";
+import { toAnalysisView } from "@/services/resume-analyzer.service";
 import { candidateMatchFactorsSchema } from "@/types/candidate-match";
+import type { HRCandidateProfileView } from "@/types/hr-candidate-profile";
 import type {
   HRRankingFilters,
   HRRankingRow,
@@ -8,6 +11,7 @@ import type {
   HRRankingsData,
   RankingSortOption,
 } from "@/types/hr-rankings";
+import { parsedResumeDataSchema } from "@/types/resume";
 
 function getMonthlyApplicationData(applications: { appliedAt: Date }[]) {
   const months: Record<string, number> = {};
@@ -373,5 +377,154 @@ export async function getHRRankings(
     spotlights,
     totalCount: rows.length,
     filteredCount: sorted.length,
+  };
+}
+
+export async function getHRCandidateProfile(
+  hrUserId: string,
+  candidateId: string,
+  jobId?: string,
+): Promise<HRCandidateProfileView | null> {
+  const hasAccess = await canHRAccessCandidate(hrUserId, candidateId);
+  if (!hasAccess) return null;
+
+  const candidate = await prisma.user.findUnique({
+    where: { id: candidateId },
+    include: {
+      candidateProfile: true,
+      resumes: {
+        orderBy: [{ isPrimary: "desc" }, { uploadedAt: "desc" }],
+      },
+      applications: {
+        where: { job: { postedById: hrUserId } },
+        include: {
+          job: { include: { company: true } },
+          resume: true,
+        },
+        orderBy: { appliedAt: "desc" },
+      },
+    },
+  });
+
+  if (!candidate) return null;
+
+  const activeApplication = jobId
+    ? candidate.applications.find((application) => application.jobId === jobId)
+    : candidate.applications[0];
+
+  const activeJobId = jobId ?? activeApplication?.jobId ?? null;
+
+  const ranking = activeJobId
+    ? await prisma.candidateRanking.findUnique({
+        where: {
+          jobId_candidateId: {
+            jobId: activeJobId,
+            candidateId,
+          },
+        },
+        include: { job: true },
+      })
+    : await prisma.candidateRanking.findFirst({
+        where: {
+          candidateId,
+          job: { postedById: hrUserId },
+        },
+        orderBy: { score: "desc" },
+        include: { job: true },
+      });
+
+  const resume =
+    activeApplication?.resume ??
+    candidate.resumes.find((item) => item.isPrimary) ??
+    candidate.resumes[0] ??
+    null;
+
+  const parsedDataResult = parsedResumeDataSchema.safeParse(resume?.parsedData);
+  const parsedData = parsedDataResult.success ? parsedDataResult.data : null;
+
+  let analysisRecord = null;
+  if (resume) {
+    analysisRecord = activeJobId
+      ? await prisma.resumeAnalysis.findFirst({
+          where: {
+            resumeId: resume.id,
+            jobId: activeJobId,
+            status: "COMPLETED",
+          },
+          orderBy: { analyzedAt: "desc" },
+        })
+      : await prisma.resumeAnalysis.findFirst({
+          where: {
+            resumeId: resume.id,
+            status: "COMPLETED",
+          },
+          orderBy: { analyzedAt: "desc" },
+        });
+  }
+
+  const parsedFactors = candidateMatchFactorsSchema.safeParse(ranking?.factors);
+  const profile = candidate.candidateProfile;
+
+  return {
+    candidate: {
+      id: candidate.id,
+      name: candidate.name,
+      email: candidate.email,
+      phone: candidate.phone,
+      bio: candidate.bio,
+      avatarUrl: candidate.avatarUrl,
+      headline: profile?.headline ?? null,
+      summary: profile?.summary ?? null,
+      location: profile?.location ?? null,
+      experienceYears:
+        profile?.experienceYears ?? parsedData?.experienceYears ?? null,
+      profileSkills: profile?.skills ?? [],
+      linkedinUrl: profile?.linkedinUrl ?? null,
+      githubUrl: profile?.githubUrl ?? null,
+      portfolioUrl: profile?.portfolioUrl ?? null,
+    },
+    resume: resume
+      ? {
+          id: resume.id,
+          fileName: resume.fileName,
+          mimeType: resume.mimeType,
+          status: resume.status,
+          uploadedAt: resume.uploadedAt,
+        }
+      : null,
+    parsedData,
+    analysis: analysisRecord ? toAnalysisView(analysisRecord) : null,
+    matchPercentage: ranking?.score ?? activeApplication?.aiScore ?? null,
+    aiSummary:
+      ranking?.aiSummary ??
+      activeApplication?.aiSummary ??
+      analysisRecord?.summary ??
+      null,
+    ranking: ranking
+      ? {
+          id: ranking.id,
+          rank: ranking.rank,
+          score: ranking.score,
+          isShortlisted: ranking.isShortlisted,
+          factors: parsedFactors.success ? parsedFactors.data : null,
+          job: {
+            id: ranking.job.id,
+            title: ranking.job.title,
+          },
+        }
+      : null,
+    applications: candidate.applications.map((application) => ({
+      id: application.id,
+      status: application.status,
+      appliedAt: application.appliedAt,
+      aiScore: application.aiScore,
+      aiSummary: application.aiSummary,
+      job: {
+        id: application.job.id,
+        title: application.job.title,
+        company: { name: application.job.company.name },
+      },
+    })),
+    activeJobId,
   };
 }

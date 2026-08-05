@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   BadgeCheck,
   Briefcase,
@@ -18,6 +19,7 @@ import type { CandidateRankingView } from "@/types/candidate-match";
 
 type CandidateMatchResultsProps = {
   rankings: CandidateRankingView[];
+  jobId?: string;
 };
 
 function ScoreBar({ label, value }: { label: string; value: number | null }) {
@@ -36,6 +38,7 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
 
 export function CandidateMatchResults({
   rankings,
+  jobId,
 }: CandidateMatchResultsProps) {
   if (rankings.length === 0) {
     return (
@@ -82,7 +85,12 @@ export function CandidateMatchResults({
                   </div>
                   <div>
                     <CardTitle className="text-lg">
-                      {ranking.candidate.name ?? ranking.candidate.email}
+                      <Link
+                        href={`/dashboard/hr/candidates/${ranking.candidate.id}${jobId ? `?jobId=${jobId}` : ""}`}
+                        className="hover:text-blue-600 hover:underline dark:hover:text-cyan-400"
+                      >
+                        {ranking.candidate.name ?? ranking.candidate.email}
+                      </Link>
                     </CardTitle>
                     <CardDescription>{ranking.candidate.email}</CardDescription>
                   </div>
@@ -161,6 +169,13 @@ export function CandidateMatchResults({
                     {ranking.aiSummary ?? "No explanation available."}
                   </p>
                 </div>
+
+                <Link
+                  href={`/dashboard/hr/candidates/${ranking.candidate.id}${jobId ? `?jobId=${jobId}` : ""}`}
+                  className="inline-flex text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400"
+                >
+                  View candidate profile →
+                </Link>
               </div>
             </CardContent>
           </Card>

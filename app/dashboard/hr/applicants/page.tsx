@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { getHRApplicants } from "@/lib/hr/queries";
 import { Badge } from "@/components/ui/badge";
@@ -77,10 +78,13 @@ export default async function ApplicantsPage() {
                   <TableRow key={application.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">
+                        <Link
+                          href={`/dashboard/hr/candidates/${application.candidateId}?jobId=${application.jobId}`}
+                          className="font-medium hover:text-blue-600 hover:underline dark:hover:text-cyan-400"
+                        >
                           {application.candidate.name ??
                             application.candidate.email}
-                        </p>
+                        </Link>
                         <p className="text-muted-foreground text-xs">
                           {application.candidate.email}
                         </p>

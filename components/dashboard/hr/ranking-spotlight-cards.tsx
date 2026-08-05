@@ -90,7 +90,12 @@ function SpotlightCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <p className="text-lg font-semibold text-white">{candidateName}</p>
+          <Link
+            href={`/dashboard/hr/candidates/${ranking.candidate.id}?jobId=${ranking.job.id}`}
+            className="text-lg font-semibold text-white hover:underline"
+          >
+            {candidateName}
+          </Link>
           <p className="text-sm text-white/70">{ranking.job.title}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -108,12 +113,20 @@ function SpotlightCard({
             </>
           )}
         </div>
-        <Link
-          href={`/dashboard/hr/jobs/${ranking.job.id}`}
-          className="inline-flex text-sm font-medium text-white/90 underline-offset-4 hover:text-white hover:underline"
-        >
-          View job match details
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/dashboard/hr/candidates/${ranking.candidate.id}?jobId=${ranking.job.id}`}
+            className="inline-flex text-sm font-medium text-white/90 underline-offset-4 hover:text-white hover:underline"
+          >
+            View profile
+          </Link>
+          <Link
+            href={`/dashboard/hr/jobs/${ranking.job.id}`}
+            className="inline-flex text-sm font-medium text-white/90 underline-offset-4 hover:text-white hover:underline"
+          >
+            View job match
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );

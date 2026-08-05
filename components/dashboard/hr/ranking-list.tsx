@@ -12,7 +12,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -87,7 +86,14 @@ export function RankingList({ rankings }: RankingListProps) {
                     #{ranking.rank}
                   </div>
                   <div>
-                    <CardTitle className="text-xl">{candidateName}</CardTitle>
+                    <CardTitle className="text-xl">
+                      <Link
+                        href={`/dashboard/hr/candidates/${ranking.candidate.id}?jobId=${ranking.job.id}`}
+                        className="hover:text-blue-600 hover:underline dark:hover:text-cyan-400"
+                      >
+                        {candidateName}
+                      </Link>
+                    </CardTitle>
                     <CardDescription>{ranking.candidate.email}</CardDescription>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary">
@@ -201,12 +207,20 @@ export function RankingList({ rankings }: RankingListProps) {
                   </p>
                 </div>
 
-                <Link
-                  href={`/dashboard/hr/jobs/${ranking.job.id}`}
-                  className="inline-flex text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400"
-                >
-                  View full job match analysis →
-                </Link>
+                <div className="flex flex-wrap gap-4">
+                  <Link
+                    href={`/dashboard/hr/candidates/${ranking.candidate.id}?jobId=${ranking.job.id}`}
+                    className="inline-flex text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400"
+                  >
+                    View candidate profile →
+                  </Link>
+                  <Link
+                    href={`/dashboard/hr/jobs/${ranking.job.id}`}
+                    className="inline-flex text-sm font-medium text-blue-600 hover:underline dark:text-cyan-400"
+                  >
+                    View full job match analysis →
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>

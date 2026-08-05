@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import mammoth from "mammoth";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getResumeForUserAccess } from "@/lib/hr/candidate-access";
 import {
   createResumeSignedUrl,
   downloadResumeFromStorage,
@@ -22,12 +22,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { id } = await context.params;
 
-  const resume = await prisma.resume.findFirst({
-    where: {
-      id,
-      candidateId: user.id,
-    },
-  });
+  const resume = await getResumeForUserAccess(user.id, user.role, id);
 
   if (!resume) {
     return NextResponse.json({ error: "Resume not found." }, { status: 404 });

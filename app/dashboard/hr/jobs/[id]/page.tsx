@@ -185,7 +185,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         </CardContent>
       </Card>
 
-      <CandidateMatchResults rankings={rankings} />
+      <CandidateMatchResults rankings={rankings} jobId={job.id} />
     </div>
   );
 }

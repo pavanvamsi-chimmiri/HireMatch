@@ -201,6 +201,9 @@ async function main() {
         "Join our engineering team to build the next generation of AI-powered recruitment tools.",
       requirements:
         "5+ years experience with TypeScript, React, and Node.js. Experience with PostgreSQL and cloud platforms.",
+      qualifications:
+        "Bachelor's degree in Computer Science or equivalent practical experience. Strong communication and collaboration skills.",
+      experienceRequired: "5+ years",
       responsibilities:
         "Design and implement new features, mentor junior developers, participate in code reviews.",
       location: "San Francisco, CA (Hybrid)",

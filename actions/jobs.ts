@@ -40,6 +40,29 @@ function parseJobStatus(value: FormDataEntryValue | null): JobStatus {
   return "DRAFT";
 }
 
+function parseSalary(value: string | null) {
+  if (!value) {
+    return { salaryMin: null, salaryMax: null };
+  }
+
+  const numbers = value
+    .match(/\d[\d,]*/g)
+    ?.map((part) => Number(part.replace(/,/g, "")));
+
+  if (!numbers?.length) {
+    return { salaryMin: null, salaryMax: null };
+  }
+
+  if (numbers.length === 1) {
+    return { salaryMin: numbers[0], salaryMax: numbers[0] };
+  }
+
+  return {
+    salaryMin: Math.min(numbers[0], numbers[1]),
+    salaryMax: Math.max(numbers[0], numbers[1]),
+  };
+}
+
 export async function createJobAction(
   _prevState: JobActionState,
   formData: FormData,
@@ -51,40 +74,34 @@ export async function createJobAction(
   }
 
   const title = formData.get("title")?.toString().trim();
-  const description = formData.get("description")?.toString().trim();
-  const requirements = formData.get("requirements")?.toString().trim() || null;
+  const companyId = formData.get("companyId")?.toString().trim();
+  const location = formData.get("location")?.toString().trim() || null;
+  const experienceRequired =
+    formData.get("experienceRequired")?.toString().trim() || null;
+  const salaryRaw = formData.get("salary")?.toString().trim() ?? "";
+  const employmentType = parseEmploymentType(formData.get("employmentType"));
+  const skillsRaw = formData.get("skillsRequired")?.toString().trim() ?? "";
   const responsibilities =
     formData.get("responsibilities")?.toString().trim() || null;
-  const location = formData.get("location")?.toString().trim() || null;
-  const skillsRaw = formData.get("skillsRequired")?.toString().trim() ?? "";
-  const salaryMinRaw = formData.get("salaryMin")?.toString().trim();
-  const salaryMaxRaw = formData.get("salaryMax")?.toString().trim();
-  const employmentType = parseEmploymentType(formData.get("employmentType"));
+  const qualifications =
+    formData.get("qualifications")?.toString().trim() || null;
+  const description = formData.get("description")?.toString().trim();
   const status = parseJobStatus(formData.get("status"));
-  const isRemote = formData.get("isRemote") === "on";
 
-  if (!title || !description) {
-    return { error: "Title and description are required." };
+  if (!title) {
+    return { error: "Job title is required." };
   }
 
-  const skillsRequired = skillsRaw
-    .split(",")
-    .map((skill) => skill.trim())
-    .filter(Boolean);
+  if (!companyId) {
+    return { error: "Company is required." };
+  }
 
-  const salaryMin = salaryMinRaw ? Number(salaryMinRaw) : null;
-  const salaryMax = salaryMaxRaw ? Number(salaryMaxRaw) : null;
-
-  if (
-    (salaryMin !== null && Number.isNaN(salaryMin)) ||
-    (salaryMax !== null && Number.isNaN(salaryMax))
-  ) {
-    return { error: "Salary values must be valid numbers." };
+  if (!description) {
+    return { error: "Complete job description is required." };
   }
 
   const hrProfile = await prisma.hRProfile.findUnique({
     where: { userId: user.id },
-    include: { company: true },
   });
 
   if (!hrProfile?.companyId) {
@@ -93,13 +110,36 @@ export async function createJobAction(
     };
   }
 
+  if (companyId !== hrProfile.companyId) {
+    return { error: "You can only post jobs for your assigned company." };
+  }
+
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+  });
+
+  if (!company) {
+    return { error: "Selected company was not found." };
+  }
+
+  const skillsRequired = skillsRaw
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+
+  const { salaryMin, salaryMax } = parseSalary(salaryRaw || null);
+  const isRemote =
+    employmentType === "REMOTE" ||
+    location?.toLowerCase().includes("remote") ||
+    false;
+
   const baseSlug = slugify(title);
   let slug = baseSlug || "job";
   let suffix = 1;
 
   while (
     await prisma.job.findFirst({
-      where: { companyId: hrProfile.companyId, slug },
+      where: { companyId, slug },
     })
   ) {
     slug = `${baseSlug}-${suffix}`;
@@ -112,7 +152,8 @@ export async function createJobAction(
         title,
         slug,
         description,
-        requirements,
+        qualifications,
+        experienceRequired,
         responsibilities,
         location,
         employmentType,
@@ -121,7 +162,7 @@ export async function createJobAction(
         status,
         isRemote,
         skillsRequired,
-        companyId: hrProfile.companyId,
+        companyId,
         postedById: user.id,
         publishedAt: status === "OPEN" ? new Date() : null,
       },

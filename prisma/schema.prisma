@@ -197,6 +197,8 @@ model Job {
   slug             String
   description      String
   requirements     String?
+  qualifications   String?
+  experienceRequired String?
   responsibilities String?
   location         String?
   employmentType   EmploymentType  @default(FULL_TIME)

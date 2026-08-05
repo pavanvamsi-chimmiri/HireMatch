@@ -271,6 +271,7 @@ model Resume {
   id           String       @id @default(cuid())
   fileName     String
   fileUrl      String
+  storagePath  String?
   fileSize     Int?
   mimeType     String?
   status       ResumeStatus @default(UPLOADED)

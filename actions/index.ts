@@ -24,3 +24,5 @@ export {
   runCandidateMatchingAction,
   type MatchingActionState,
 } from "./matching";
+
+export { applyToJobAction, type ApplyJobActionState } from "./applications";

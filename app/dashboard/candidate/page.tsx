@@ -66,7 +66,12 @@ export default async function CandidateDashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <RecentApplications applications={data.recentApplications} />
-        <RecommendedJobsPreview jobs={data.recommendedJobs} />
+        <RecommendedJobsPreview
+          jobs={data.recommendedJobs}
+          hasParsedResume={data.resumes.some(
+            (resume) => resume.status === "PARSED",
+          )}
+        />
       </div>
     </div>
   );

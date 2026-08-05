@@ -1,38 +1,53 @@
-import { MapPin, Briefcase, DollarSign, Building2 } from "lucide-react";
+import Link from "next/link";
+import { Briefcase } from "lucide-react";
 import { requireRole } from "@/lib/auth";
-import { getRecommendedJobs } from "@/lib/candidate/queries";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  getCandidateResumes,
+  getRecommendedJobs,
+} from "@/lib/candidate/queries";
+import { JobRecommendationCard } from "@/components/dashboard/candidate/job-recommendation-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
 export default async function RecommendedJobsPage() {
   const user = await requireRole("CANDIDATE");
 
-  let jobs: Awaited<ReturnType<typeof getRecommendedJobs>> = [];
+  let recommendations: Awaited<ReturnType<typeof getRecommendedJobs>> = [];
+  let hasParsedResume = false;
+
   try {
-    jobs = await getRecommendedJobs(user.id);
+    const [jobs, resumes] = await Promise.all([
+      getRecommendedJobs(user.id),
+      getCandidateResumes(user.id),
+    ]);
+    recommendations = jobs;
+    hasParsedResume = resumes.some((resume) => resume.status === "PARSED");
   } catch {
-    jobs = [];
+    recommendations = [];
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Recommended Jobs</h1>
-        <p className="text-muted-foreground mt-2">
-          Open positions sorted by skill match with your profile.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Recommended Jobs
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl">
+            Jobs ranked by AI match using your skills, education, experience,
+            projects, and location. Apply in one click.
+          </p>
+        </div>
+        {!hasParsedResume && (
+          <Button asChild className="rounded-xl">
+            <Link href="/dashboard/candidate/resume">Upload Resume</Link>
+          </Button>
+        )}
       </div>
 
-      {jobs.length === 0 ? (
+      {recommendations.length === 0 ? (
         <Card className="border-border/50">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Briefcase className="text-muted-foreground size-12 opacity-40" />
@@ -43,73 +58,12 @@ export default async function RecommendedJobsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {jobs.map((job) => (
-            <Card
-              key={job.id}
-              className="border-border/50 transition-all hover:border-violet-500/30 hover:shadow-md"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-xl">{job.title}</CardTitle>
-                    <CardDescription className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="flex items-center gap-1">
-                        <Building2 className="size-3.5" />
-                        {job.company.name}
-                      </span>
-                      {(job.location || job.isRemote) && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="size-3.5" />
-                          {job.isRemote ? "Remote" : job.location}
-                        </span>
-                      )}
-                      {job.salaryMin && job.salaryMax && (
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="size-3.5" />$
-                          {(job.salaryMin / 1000).toFixed(0)}k – $
-                          {(job.salaryMax / 1000).toFixed(0)}k
-                        </span>
-                      )}
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary">
-                    {job.employmentType.replace("_", " ")}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground line-clamp-2 text-sm">
-                  {job.description}
-                </p>
-                {job.skillsRequired.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {job.skillsRequired.slice(0, 5).map((skill) => (
-                      <Badge key={skill} variant="outline" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {job.skillsRequired.length > 5 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{job.skillsRequired.length - 5} more
-                      </Badge>
-                    )}
-                  </div>
-                )}
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">
-                    {job._count.applications} applicant
-                    {job._count.applications !== 1 ? "s" : ""}
-                  </span>
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
-                    disabled
-                  >
-                    Apply Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {recommendations.map((recommendation) => (
+            <JobRecommendationCard
+              key={recommendation.job.id}
+              recommendation={recommendation}
+              hasParsedResume={hasParsedResume}
+            />
           ))}
         </div>
       )}

@@ -7,6 +7,7 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
+import { ApplyJobButton } from "@/components/dashboard/candidate/apply-job-button";
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type StatCardsProps = {
   stats: {
@@ -172,17 +174,26 @@ export function RecentApplications({ applications }: RecentApplicationsProps) {
 
 type RecommendedJobsPreviewProps = {
   jobs: {
-    id: string;
-    title: string;
-    location: string | null;
-    isRemote: boolean;
-    salaryMin: number | null;
-    salaryMax: number | null;
-    company: { name: string };
+    job: {
+      id: string;
+      title: string;
+      location: string | null;
+      isRemote: boolean;
+      salaryMin: number | null;
+      salaryMax: number | null;
+      company: { name: string };
+    };
+    matchPercentage: number;
+    hasApplied: boolean;
+    applicationStatus: string | null;
   }[];
+  hasParsedResume?: boolean;
 };
 
-export function RecommendedJobsPreview({ jobs }: RecommendedJobsPreviewProps) {
+export function RecommendedJobsPreview({
+  jobs,
+  hasParsedResume = true,
+}: RecommendedJobsPreviewProps) {
   return (
     <Card className="border-border/50">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -205,32 +216,56 @@ export function RecommendedJobsPreview({ jobs }: RecommendedJobsPreviewProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {jobs.slice(0, 4).map((job) => (
+            {jobs.slice(0, 4).map((recommendation) => (
               <div
-                key={job.id}
-                className="border-border/50 hover:bg-muted/30 flex items-start gap-3 rounded-xl border p-4 transition-colors"
+                key={recommendation.job.id}
+                className="border-border/50 hover:bg-muted/30 rounded-xl border p-4 transition-colors"
               >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/10 to-indigo-600/10">
-                  <Briefcase className="size-4 text-violet-600 dark:text-violet-400" />
+                <div className="flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/10 to-indigo-600/10">
+                    <Briefcase className="size-4 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link
+                          href="/dashboard/candidate/jobs"
+                          className="truncate font-medium hover:text-violet-600 hover:underline dark:hover:text-violet-400"
+                        >
+                          {recommendation.job.title}
+                        </Link>
+                        <p className="text-muted-foreground text-sm">
+                          {recommendation.job.company.name}
+                          {recommendation.job.isRemote
+                            ? " · Remote"
+                            : recommendation.job.location
+                              ? ` · ${recommendation.job.location}`
+                              : ""}
+                        </p>
+                      </div>
+                      <Badge className="bg-violet-600/10 text-violet-700 dark:text-violet-300">
+                        {recommendation.matchPercentage}%
+                      </Badge>
+                    </div>
+                    {recommendation.job.salaryMin &&
+                      recommendation.job.salaryMax && (
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          ${(recommendation.job.salaryMin / 1000).toFixed(0)}k –
+                          ${(recommendation.job.salaryMax / 1000).toFixed(0)}k
+                        </p>
+                      )}
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <Bookmark className="text-muted-foreground size-4 shrink-0" />
+                      <ApplyJobButton
+                        jobId={recommendation.job.id}
+                        jobTitle={recommendation.job.title}
+                        hasApplied={recommendation.hasApplied}
+                        applicationStatus={recommendation.applicationStatus}
+                        disabled={!hasParsedResume}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{job.title}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {job.company.name}
-                    {job.isRemote
-                      ? " · Remote"
-                      : job.location
-                        ? ` · ${job.location}`
-                        : ""}
-                  </p>
-                  {job.salaryMin && job.salaryMax && (
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      ${(job.salaryMin / 1000).toFixed(0)}k – $
-                      {(job.salaryMax / 1000).toFixed(0)}k
-                    </p>
-                  )}
-                </div>
-                <Bookmark className="text-muted-foreground size-4 shrink-0" />
               </div>
             ))}
           </div>

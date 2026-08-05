@@ -238,6 +238,91 @@ export function calculateOverallMatch(factors: {
   return Math.round(Math.max(0, Math.min(100, score)));
 }
 
+export function calculateLocationMatch(
+  job: {
+    location?: string | null;
+    isRemote?: boolean;
+  },
+  profile: {
+    location?: string | null;
+    openToRemote?: boolean;
+    openToRelocate?: boolean;
+  } | null,
+): number {
+  if (job.isRemote) {
+    return profile?.openToRemote === false ? 70 : 100;
+  }
+
+  if (!job.location) {
+    return 75;
+  }
+
+  if (!profile?.location) {
+    return profile?.openToRelocate ? 65 : 45;
+  }
+
+  const jobLocation = job.location.toLowerCase();
+  const candidateLocation = profile.location.toLowerCase();
+
+  if (
+    jobLocation.includes(candidateLocation) ||
+    candidateLocation.includes(jobLocation)
+  ) {
+    return 100;
+  }
+
+  const jobTokens = jobLocation
+    .split(/[^a-z0-9]+/i)
+    .filter((token) => token.length > 2);
+  const matchedTokens = jobTokens.filter((token) =>
+    candidateLocation.includes(token),
+  );
+
+  if (matchedTokens.length > 0) {
+    return Math.round(
+      (matchedTokens.length / Math.max(jobTokens.length, 1)) * 100,
+    );
+  }
+
+  return profile.openToRelocate ? 60 : 35;
+}
+
+export function calculateCandidateJobMatch(factors: {
+  skillMatch: number;
+  experienceMatch: number;
+  educationMatch: number;
+  projectMatch: number;
+  locationMatch: number;
+}): number {
+  const score =
+    factors.skillMatch * 0.25 +
+    factors.experienceMatch * 0.2 +
+    factors.educationMatch * 0.15 +
+    factors.projectMatch * 0.2 +
+    factors.locationMatch * 0.2;
+
+  return Math.round(Math.max(0, Math.min(100, score)));
+}
+
+export function buildCandidateMatchSummary(
+  jobTitle: string,
+  factors: {
+    overallMatch: number;
+    skillMatch: number;
+    experienceMatch: number;
+    projectMatch: number;
+    locationMatch: number;
+  },
+  matchedSkills: string[],
+): string {
+  const skills =
+    matchedSkills.length > 0
+      ? ` including ${matchedSkills.slice(0, 3).join(", ")}`
+      : "";
+
+  return `You are a ${factors.overallMatch}% match for ${jobTitle} with ${factors.skillMatch}% skill alignment${skills}, ${factors.experienceMatch}% experience fit, ${factors.projectMatch}% project relevance, and ${factors.locationMatch}% location compatibility.`;
+}
+
 export function buildHeuristicExplanation(
   candidateName: string | null,
   factors: {

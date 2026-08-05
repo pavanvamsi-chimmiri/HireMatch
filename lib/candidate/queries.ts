@@ -1,5 +1,6 @@
 import type { ApplicationStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getJobRecommendationsForCandidate } from "@/services/job-recommendation.service";
 
 export async function getCandidateDashboardData(userId: string) {
   const [
@@ -7,7 +8,7 @@ export async function getCandidateDashboardData(userId: string) {
     resumes,
     notifications,
     unreadNotifications,
-    openJobs,
+    recommendedJobs,
     candidateProfile,
   ] = await Promise.all([
     prisma.application.findMany({
@@ -29,12 +30,7 @@ export async function getCandidateDashboardData(userId: string) {
     prisma.notification.count({
       where: { userId, isRead: false },
     }),
-    prisma.job.findMany({
-      where: { status: "OPEN" },
-      include: { company: true },
-      orderBy: { publishedAt: "desc" },
-      take: 6,
-    }),
+    getJobRecommendationsForCandidate(userId),
     prisma.candidateProfile.findUnique({
       where: { userId },
     }),
@@ -71,7 +67,7 @@ export async function getCandidateDashboardData(userId: string) {
     statusCounts,
     monthlyApplications,
     recentApplications: applications.slice(0, 5),
-    recommendedJobs: openJobs,
+    recommendedJobs: recommendedJobs.slice(0, 4),
     notifications,
     resumes,
     candidateProfile,
@@ -140,32 +136,7 @@ export async function getCandidateResumes(userId: string) {
 }
 
 export async function getRecommendedJobs(userId: string) {
-  const profile = await prisma.candidateProfile.findUnique({
-    where: { userId },
-  });
-
-  const jobs = await prisma.job.findMany({
-    where: { status: "OPEN" },
-    include: {
-      company: true,
-      _count: { select: { applications: true } },
-    },
-    orderBy: { publishedAt: "desc" },
-  });
-
-  if (!profile?.skills.length) {
-    return jobs;
-  }
-
-  return [...jobs].sort((a, b) => {
-    const scoreA = a.skillsRequired.filter((s) =>
-      profile.skills.some((ps) => ps.toLowerCase() === s.toLowerCase()),
-    ).length;
-    const scoreB = b.skillsRequired.filter((s) =>
-      profile.skills.some((ps) => ps.toLowerCase() === s.toLowerCase()),
-    ).length;
-    return scoreB - scoreA;
-  });
+  return getJobRecommendationsForCandidate(userId);
 }
 
 export async function getCandidateSettings(userId: string) {

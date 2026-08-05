@@ -19,3 +19,8 @@ export {
   scheduleResumeAnalysis,
   toAnalysisView,
 } from "./resume-analyzer.service";
+export {
+  getJobRecommendationsForCandidate,
+  getCandidateJobRecommendation,
+  scoreSingleJobForCandidate,
+} from "./job-recommendation.service";

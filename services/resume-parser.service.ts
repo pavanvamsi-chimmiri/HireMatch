@@ -159,6 +159,10 @@ export async function parseAndStoreResume(resumeId: string) {
       await import("@/services/resume-analyzer.service");
     await analyzeAndStoreResume(resumeId);
 
+    const { indexCandidateResume } =
+      await import("@/services/candidate-search-index.service");
+    await indexCandidateResume(resumeId);
+
     return parsedData;
   } catch (error) {
     await prisma.resume.update({

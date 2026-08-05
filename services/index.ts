@@ -24,3 +24,8 @@ export {
   getCandidateJobRecommendation,
   scoreSingleJobForCandidate,
 } from "./job-recommendation.service";
+export {
+  indexCandidateResume,
+  ensureResumeIndexed,
+} from "./candidate-search-index.service";
+export { searchCandidatesGlobally } from "./candidate-search.service";

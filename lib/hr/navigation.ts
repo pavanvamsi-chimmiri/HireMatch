@@ -37,8 +37,8 @@ export const hrNavItems = [
     icon: Trophy,
   },
   {
-    title: "Candidate Search",
-    href: "/dashboard/hr/candidates",
+    title: "Global Search",
+    href: "/dashboard/hr/search",
     icon: Search,
   },
   {

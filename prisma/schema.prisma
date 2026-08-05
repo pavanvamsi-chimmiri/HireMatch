@@ -282,6 +282,10 @@ model Resume {
   isPrimary    Boolean      @default(false)
   parsedText   String?
   parsedData   Json?
+  embedding    Json?
+  facetEmbeddings Json?
+  embeddingModel String?
+  embeddedAt   DateTime?
   uploadedAt   DateTime     @default(now())
   parsedAt     DateTime?
   createdAt    DateTime     @default(now())

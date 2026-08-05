@@ -6,8 +6,8 @@ AI-powered recruitment platform built with Next.js 15, React 19, and modern tool
 
 - **Framework:** Next.js 15 (App Router)
 - **UI:** React 19, Tailwind CSS 4, Shadcn UI, Framer Motion
-- **Database:** PostgreSQL with Prisma ORM
-- **Auth (planned):** Supabase
+- **Database:** PostgreSQL (Supabase) with Prisma ORM
+- **Auth:** Supabase Authentication
 - **AI:** OpenAI API
 - **Email:** Resend API
 
@@ -30,9 +30,17 @@ cp .env.example .env
 # Generate Prisma client
 npm run db:generate
 
+# Run migrations
+npm run db:migrate
+
+# Seed sample data
+npm run db:seed
+
 # Start development server
 npm run dev
 ```
+
+See [`prisma/SCHEMA.md`](prisma/SCHEMA.md) for the full database schema and relationships.
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
@@ -65,7 +73,44 @@ See `.env.example` for all required variables:
 | `OPENAI_API_KEY`                | OpenAI API key               |
 | `RESEND_API_KEY`                | Resend email API key         |
 
-## Scripts
+## Authentication
+
+HireMatch AI uses **Supabase Authentication** with role-based access control.
+
+### Roles
+
+| Role        | Dashboard              | Description                    |
+| ----------- | ---------------------- | ------------------------------ |
+| `HR`        | `/dashboard/hr`        | Recruiters and hiring managers |
+| `CANDIDATE` | `/dashboard/candidate` | Job seekers                    |
+
+User roles are stored in both Supabase `user_metadata` and the Prisma `User` table.
+
+### Auth Flow
+
+1. **Register** at `/register` — select HR or Candidate role
+2. **Profile setup** at `/profile` — required on first login
+3. **Dashboard redirect** — HR → `/dashboard/hr`, Candidate → `/dashboard/candidate`
+
+### Supabase Setup
+
+1. Create a Supabase project and add credentials to `.env`
+2. In **Authentication → URL Configuration**, set:
+   - Site URL: `http://localhost:3000`
+   - Redirect URLs: `http://localhost:3000/auth/callback`
+3. Enable Email provider under **Authentication → Providers**
+4. Push the database schema:
+
+```bash
+npm run db:push
+```
+
+### Protected Routes
+
+Middleware protects:
+
+- `/dashboard/*` — requires authentication and matching role
+- `/profile` — requires authentication
 
 | Command               | Description               |
 | --------------------- | ------------------------- |
@@ -75,6 +120,8 @@ See `.env.example` for all required variables:
 | `npm run format`      | Format code with Prettier |
 | `npm run db:generate` | Generate Prisma client    |
 | `npm run db:migrate`  | Run database migrations   |
+| `npm run db:seed`     | Seed sample data          |
+| `npm run db:reset`    | Reset DB and re-seed      |
 | `npm run db:studio`   | Open Prisma Studio        |
 
 ## License

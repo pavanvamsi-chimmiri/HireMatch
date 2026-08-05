@@ -81,7 +81,7 @@ export async function syncUserFromSupabase(
     return null;
   }
 
-  return prisma.user.upsert({
+  const user = await prisma.user.upsert({
     where: { supabaseId },
     update: {
       email,
@@ -95,6 +95,24 @@ export async function syncUserFromSupabase(
       profileCompleted,
     },
   });
+
+  if (role === "CANDIDATE") {
+    await prisma.candidateProfile.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: { userId: user.id },
+    });
+  }
+
+  if (role === "HR") {
+    await prisma.hRProfile.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: { userId: user.id },
+    });
+  }
+
+  return user;
 }
 
 export function parseUserRole(value: unknown): UserRole | null {

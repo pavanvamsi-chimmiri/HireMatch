@@ -12,6 +12,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
@@ -56,6 +58,11 @@
     "prettier-plugin-tailwindcss": "^0.7.1",
     "prisma": "^6.19.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.7",
+    "typescript": "^5",
+    "tsx": "^4.20.6"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

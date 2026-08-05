@@ -1,5 +1,5 @@
-// HireMatch AI — Prisma schema
-// https://pris.ly/d/prisma-schema
+// HireMatch AI — Complete Database Schema
+// PostgreSQL via Supabase + Prisma ORM
 
 generator client {
   provider = "prisma-client-js"
@@ -9,6 +9,8 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
 
 enum UserRole {
   HR
@@ -22,6 +24,14 @@ enum JobStatus {
   ARCHIVED
 }
 
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+}
+
 enum ApplicationStatus {
   PENDING
   REVIEWING
@@ -31,6 +41,54 @@ enum ApplicationStatus {
   REJECTED
   WITHDRAWN
 }
+
+enum ResumeStatus {
+  UPLOADED
+  PROCESSING
+  PARSED
+  FAILED
+}
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationType {
+  APPLICATION_UPDATE
+  JOB_MATCH
+  INTERVIEW
+  RANKING_UPDATE
+  SYSTEM
+  MESSAGE
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+}
+
+enum EmailType {
+  WELCOME
+  APPLICATION_RECEIVED
+  APPLICATION_UPDATE
+  INTERVIEW_INVITE
+  JOB_MATCH
+  PASSWORD_RESET
+  SYSTEM
+}
+
+enum SettingScope {
+  USER
+  SYSTEM
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
   id               String   @id @default(cuid())
@@ -42,16 +100,75 @@ model User {
   phone            String?
   bio              String?
   profileCompleted Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  lastLoginAt      DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  company      Company?      @relation(fields: [companyId], references: [id])
-  companyId    String?
-  applications Application[]
-  jobs         Job[]         @relation("JobRecruiter")
+  candidateProfile CandidateProfile?
+  hrProfile        HRProfile?
+  applications     Application[]
+  jobs             Job[]             @relation("JobPoster")
+  resumes          Resume[]
+  notifications    Notification[]
+  emails           Email[]
+  settings         Setting[]
+  rankings         CandidateRanking[] @relation("RankedCandidate")
 
+  @@index([role])
+  @@index([email])
   @@map("users")
 }
+
+// ─── Candidate Profile ───────────────────────────────────────────────────────
+
+model CandidateProfile {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  headline          String?
+  summary           String?
+  location          String?
+  experienceYears   Int?
+  skills            String[]        @default([])
+  education         Json?
+  certifications    String[]        @default([])
+  linkedinUrl       String?
+  portfolioUrl      String?
+  githubUrl         String?
+  desiredSalaryMin  Int?
+  desiredSalaryMax  Int?
+  preferredJobType  EmploymentType?
+  openToRemote      Boolean         @default(true)
+  openToRelocate    Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_profiles")
+}
+
+// ─── HR Profile ──────────────────────────────────────────────────────────────
+
+model HRProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  companyId    String?
+  jobTitle     String?
+  department   String?
+  linkedinUrl  String?
+  hiringFocus  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@map("hr_profiles")
+}
+
+// ─── Company ─────────────────────────────────────────────────────────────────
 
 model Company {
   id          String   @id @default(cuid())
@@ -60,56 +177,254 @@ model Company {
   description String?
   website     String?
   logoUrl     String?
+  industry    String?
+  size        String?
+  location    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users User[]
-  jobs  Job[]
+  hrProfiles HRProfile[]
+  jobs       Job[]
 
   @@map("companies")
 }
 
+// ─── Jobs ────────────────────────────────────────────────────────────────────
+
 model Job {
-  id           String    @id @default(cuid())
-  title        String
-  description  String
-  requirements String?
-  location     String?
-  salaryMin    Int?
-  salaryMax    Int?
-  status       JobStatus @default(DRAFT)
-  aiMatchScore Float?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String          @id @default(cuid())
+  title            String
+  slug             String
+  description      String
+  requirements     String?
+  responsibilities String?
+  location         String?
+  employmentType   EmploymentType  @default(FULL_TIME)
+  salaryMin        Int?
+  salaryMax        Int?
+  salaryCurrency   String          @default("USD")
+  status           JobStatus       @default(DRAFT)
+  isRemote         Boolean         @default(false)
+  skillsRequired   String[]        @default([])
+  benefits         String[]        @default([])
+  applicationDeadline DateTime?
+  viewCount        Int             @default(0)
+  aiMatchThreshold Float?
+  publishedAt      DateTime?
+  closedAt         DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId   String
-  recruiter   User    @relation("JobRecruiter", fields: [recruiterId], references: [id])
-  recruiterId String
+  companyId  String
+  postedById String
 
+  company      Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  postedBy     User               @relation("JobPoster", fields: [postedById], references: [id])
   applications Application[]
+  rankings     CandidateRanking[]
+  analyses     ResumeAnalysis[]
 
+  @@unique([companyId, slug])
   @@index([companyId])
+  @@index([postedById])
   @@index([status])
+  @@index([publishedAt])
   @@map("jobs")
 }
 
-model Application {
-  id          String            @id @default(cuid())
-  coverLetter String?
-  resumeUrl   String?
-  aiScore     Float?
-  aiSummary   String?
-  status      ApplicationStatus @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+// ─── Applications ────────────────────────────────────────────────────────────
 
-  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  jobId  String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Application {
+  id           String            @id @default(cuid())
+  coverLetter  String?
+  status       ApplicationStatus @default(PENDING)
+  aiScore      Float?
+  aiSummary    String?
+  hrNotes      String?
+  appliedAt    DateTime          @default(now())
+  reviewedAt   DateTime?
+  shortlistedAt DateTime?
+  rejectedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  jobId       String
+  candidateId String
+  resumeId    String?
+
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate User              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  resume    Resume?           @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  analyses  ResumeAnalysis[]
+  ranking   CandidateRanking?
+
+  @@unique([jobId, candidateId])
+  @@index([candidateId])
+  @@index([status])
+  @@index([appliedAt])
+  @@map("applications")
+}
+
+// ─── Resumes ─────────────────────────────────────────────────────────────────
+
+model Resume {
+  id           String       @id @default(cuid())
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  status       ResumeStatus @default(UPLOADED)
+  isPrimary    Boolean      @default(false)
+  parsedText   String?
+  parsedData   Json?
+  uploadedAt   DateTime     @default(now())
+  parsedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  candidateId String
+
+  candidate    User             @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  applications Application[]
+  analyses     ResumeAnalysis[]
+
+  @@index([candidateId])
+  @@index([isPrimary])
+  @@map("resumes")
+}
+
+// ─── Resume Analysis ─────────────────────────────────────────────────────────
+
+model ResumeAnalysis {
+  id               String         @id @default(cuid())
+  status           AnalysisStatus @default(PENDING)
+  overallScore     Float?
+  skillsScore      Float?
+  experienceScore  Float?
+  educationScore   Float?
+  cultureFitScore  Float?
+  summary          String?
+  strengths        String[]       @default([])
+  gaps             String[]       @default([])
+  recommendations  String[]       @default([])
+  keywordMatches   String[]       @default([])
+  model            String?
+  tokensUsed       Int?
+  rawResponse      Json?
+  analyzedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  resumeId      String
+  applicationId String?
+  jobId         String?
+
+  resume      Resume       @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  job         Job?         @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([resumeId])
+  @@index([applicationId])
+  @@index([jobId])
+  @@index([status])
+  @@map("resume_analyses")
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  linkUrl   String?
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
   userId String
 
-  @@unique([jobId, userId])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ─── Emails ──────────────────────────────────────────────────────────────────
+
+model Email {
+  id          String      @id @default(cuid())
+  type        EmailType
+  to          String
+  from        String
+  subject     String
+  htmlBody    String?
+  textBody    String?
+  status      EmailStatus @default(PENDING)
+  resendId    String?
+  errorMessage String?
+  metadata    Json?
+  sentAt      DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  userId String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
   @@index([status])
-  @@map("applications")
+  @@index([type])
+  @@index([createdAt])
+  @@map("emails")
+}
+
+// ─── Candidate Rankings ──────────────────────────────────────────────────────
+
+model CandidateRanking {
+  id          String   @id @default(cuid())
+  rank        Int
+  score       Float
+  aiSummary   String?
+  factors     Json?
+  isShortlisted Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobId         String
+  candidateId   String
+  applicationId String? @unique
+
+  job         Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate   User         @relation("RankedCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@unique([jobId, candidateId])
+  @@index([jobId, rank])
+  @@index([score])
+  @@map("candidate_rankings")
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+model Setting {
+  id        String       @id @default(cuid())
+  scope     SettingScope @default(USER)
+  category  String
+  key       String
+  value     Json
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  userId String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([scope, userId, category, key])
+  @@index([scope])
+  @@index([category])
+  @@map("settings")
 }

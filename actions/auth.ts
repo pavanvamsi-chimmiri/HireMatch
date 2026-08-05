@@ -150,14 +150,34 @@ export async function completeProfileAction(
     return { error: "Name is required." };
   }
 
-  const updatedUser = await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      name,
-      phone,
-      bio,
-      profileCompleted: true,
-    },
+  const updatedUser = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id: user.id },
+      data: {
+        name,
+        phone,
+        bio,
+        profileCompleted: true,
+      },
+    });
+
+    if (user.role === "CANDIDATE") {
+      await tx.candidateProfile.upsert({
+        where: { userId: user.id },
+        update: { summary: bio ?? undefined },
+        create: { userId: user.id, summary: bio ?? undefined },
+      });
+    }
+
+    if (user.role === "HR") {
+      await tx.hRProfile.upsert({
+        where: { userId: user.id },
+        update: {},
+        create: { userId: user.id },
+      });
+    }
+
+    return updated;
   });
 
   const supabase = await createSupabaseServerClient();
@@ -191,9 +211,19 @@ export async function updateProfileAction(
     return { error: "Name is required." };
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { name, phone, bio },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: user.id },
+      data: { name, phone, bio },
+    });
+
+    if (user.role === "CANDIDATE") {
+      await tx.candidateProfile.upsert({
+        where: { userId: user.id },
+        update: { summary: bio ?? undefined },
+        create: { userId: user.id, summary: bio ?? undefined },
+      });
+    }
   });
 
   const supabase = await createSupabaseServerClient();

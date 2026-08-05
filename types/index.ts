@@ -1,11 +1,26 @@
 export type {
   User,
+  CandidateProfile,
+  HRProfile,
   Company,
   Job,
   Application,
+  Resume,
+  ResumeAnalysis,
+  Notification,
+  Email,
+  CandidateRanking,
+  Setting,
   UserRole,
   JobStatus,
+  EmploymentType,
   ApplicationStatus,
+  ResumeStatus,
+  AnalysisStatus,
+  NotificationType,
+  EmailStatus,
+  EmailType,
+  SettingScope,
 } from "@prisma/client";
 
 export type ApiResponse<T = unknown> = {

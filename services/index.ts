@@ -3,3 +3,9 @@ export {
   parseAndStoreResume,
   scheduleResumeParsing,
 } from "./resume-parser.service";
+export {
+  analyzeAndStoreResume,
+  getLatestResumeAnalysis,
+  scheduleResumeAnalysis,
+  toAnalysisView,
+} from "./resume-analyzer.service";

@@ -56,5 +56,6 @@ export type FaqItem = {
 };
 
 export * from "./resume";
+export * from "./resume-analysis";
 
 export * from "./database";

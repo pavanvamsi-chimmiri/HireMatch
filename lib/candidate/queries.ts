@@ -125,6 +125,16 @@ export async function getCandidateNotifications(userId: string) {
 export async function getCandidateResumes(userId: string) {
   return prisma.resume.findMany({
     where: { candidateId: userId },
+    include: {
+      analyses: {
+        where: {
+          jobId: null,
+          applicationId: null,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
     orderBy: { uploadedAt: "desc" },
   });
 }

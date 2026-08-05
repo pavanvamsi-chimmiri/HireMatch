@@ -25,9 +25,11 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ExtractedResumeData } from "@/components/dashboard/candidate/extracted-resume-data";
+import { ResumeAnalysisCards } from "@/components/dashboard/candidate/resume-analysis-cards";
 import { validateResumeFile } from "@/lib/resume/validation";
 import type { ParsedResumeData } from "@/types/resume";
 import { parsedResumeDataSchema } from "@/types/resume";
+import type { ResumeAnalysisView } from "@/types/resume-analysis";
 
 type ResumeItem = {
   id: string;
@@ -40,6 +42,7 @@ type ResumeItem = {
   isPrimary: boolean;
   uploadedAt: Date;
   parsedData: unknown;
+  analysis: ResumeAnalysisView | null;
 };
 
 function parseResumeData(value: unknown): ParsedResumeData | null {
@@ -82,14 +85,20 @@ export function UploadResumeClient({ resumes }: UploadResumePageProps) {
       selectedResume?.status === "UPLOADED" ||
       selectedResume?.status === "PROCESSING";
 
-    if (!isParsing) return;
+    const isAnalyzing =
+      selectedResume?.status === "PARSED" &&
+      (!selectedResume.analysis ||
+        selectedResume.analysis.status === "PENDING" ||
+        selectedResume.analysis.status === "PROCESSING");
+
+    if (!isParsing && !isAnalyzing) return;
 
     const interval = window.setInterval(() => {
       router.refresh();
     }, 3000);
 
     return () => window.clearInterval(interval);
-  }, [router, selectedResume?.status]);
+  }, [router, selectedResume?.analysis, selectedResume?.status]);
 
   function resetUploadState() {
     setUploadProgress(0);
@@ -313,6 +322,13 @@ export function UploadResumeClient({ resumes }: UploadResumePageProps) {
         <ExtractedResumeData
           status={selectedResume.status}
           parsedData={parseResumeData(selectedResume.parsedData)}
+        />
+      )}
+
+      {selectedResume && (
+        <ResumeAnalysisCards
+          analysis={selectedResume.analysis}
+          resumeStatus={selectedResume.status}
         />
       )}
 

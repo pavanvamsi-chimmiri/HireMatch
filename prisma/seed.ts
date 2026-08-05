@@ -287,10 +287,36 @@ async function main() {
       parsedData: {
         name: "Alex Johnson",
         email: "alex.johnson@email.com",
-        skills: ["TypeScript", "React", "Node.js", "PostgreSQL", "AWS"],
-        experience: [
-          { title: "Senior Developer", company: "TechCorp", years: 3 },
+        phone: "+1 (555) 123-4567",
+        skills: ["TypeScript", "React", "Node.js", "PostgreSQL"],
+        technologies: ["AWS", "Docker", "GraphQL"],
+        education: [
+          {
+            institution: "State University",
+            degree: "B.S.",
+            field: "Computer Science",
+            startDate: "2014",
+            endDate: "2018",
+          },
         ],
+        experience: [
+          {
+            title: "Senior Developer",
+            company: "TechCorp",
+            startDate: "2021",
+            endDate: "Present",
+            description: "Led full-stack development for SaaS platform.",
+          },
+        ],
+        projects: [
+          {
+            name: "HireMatch Platform",
+            description: "AI-powered recruitment matching system.",
+            technologies: ["Next.js", "OpenAI"],
+          },
+        ],
+        certifications: ["AWS Certified Developer"],
+        experienceYears: 5,
       },
       parsedAt: new Date(),
     },
@@ -386,6 +412,7 @@ async function main() {
       applicationId: alexApplication.id,
       jobId: seniorEngineerJob.id,
       status: AnalysisStatus.COMPLETED,
+      atsScore: 91.0,
       overallScore: 92.5,
       skillsScore: 95.0,
       experienceScore: 90.0,
@@ -398,7 +425,20 @@ async function main() {
         "All required skills present",
         "AWS certification",
       ],
+      weaknesses: ["Limited leadership examples", "GraphQL not highlighted"],
       gaps: ["No GraphQL experience mentioned"],
+      missingSkills: ["GraphQL", "System design examples"],
+      suggestedSkills: ["GraphQL", "Team leadership", "Technical writing"],
+      recommendedCertifications: ["AWS Solutions Architect"],
+      recommendedProjects: [
+        {
+          name: "Open Source API Platform",
+          description:
+            "Build and document a GraphQL API with authentication and deployment.",
+          technologies: ["GraphQL", "Node.js", "PostgreSQL"],
+          rationale: "Fills the GraphQL gap visible in the resume.",
+        },
+      ],
       recommendations: [
         "Schedule technical interview",
         "Assess system design skills",

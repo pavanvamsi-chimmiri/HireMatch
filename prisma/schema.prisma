@@ -297,24 +297,30 @@ model Resume {
 // ─── Resume Analysis ─────────────────────────────────────────────────────────
 
 model ResumeAnalysis {
-  id               String         @id @default(cuid())
-  status           AnalysisStatus @default(PENDING)
-  overallScore     Float?
-  skillsScore      Float?
-  experienceScore  Float?
-  educationScore   Float?
-  cultureFitScore  Float?
-  summary          String?
-  strengths        String[]       @default([])
-  gaps             String[]       @default([])
-  recommendations  String[]       @default([])
-  keywordMatches   String[]       @default([])
-  model            String?
-  tokensUsed       Int?
-  rawResponse      Json?
-  analyzedAt       DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id                        String         @id @default(cuid())
+  status                    AnalysisStatus @default(PENDING)
+  atsScore                  Float?
+  overallScore              Float?
+  skillsScore               Float?
+  experienceScore           Float?
+  educationScore            Float?
+  cultureFitScore           Float?
+  summary                   String?
+  strengths                 String[]       @default([])
+  weaknesses                String[]       @default([])
+  gaps                      String[]       @default([])
+  missingSkills             String[]       @default([])
+  suggestedSkills           String[]       @default([])
+  recommendedCertifications String[]       @default([])
+  recommendedProjects       Json?
+  recommendations           String[]       @default([])
+  keywordMatches            String[]       @default([])
+  model                     String?
+  tokensUsed                Int?
+  rawResponse               Json?
+  analyzedAt                DateTime?
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
 
   resumeId      String
   applicationId String?

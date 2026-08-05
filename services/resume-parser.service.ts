@@ -155,6 +155,10 @@ export async function parseAndStoreResume(resumeId: string) {
       parsedData,
     );
 
+    const { analyzeAndStoreResume } =
+      await import("@/services/resume-analyzer.service");
+    await analyzeAndStoreResume(resumeId);
+
     return parsedData;
   } catch (error) {
     await prisma.resume.update({

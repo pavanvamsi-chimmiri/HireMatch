@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -7,6 +8,7 @@ import {
   uploadResumeToStorage,
 } from "@/lib/resume/storage";
 import { validateResumeFile } from "@/lib/resume/validation";
+import { parseAndStoreResume } from "@/services/resume-parser.service";
 
 export const runtime = "nodejs";
 
@@ -83,6 +85,9 @@ export async function POST(request: Request) {
             fileSize: file.size,
             mimeType: validation.mimeType,
             status: "UPLOADED",
+            parsedText: null,
+            parsedData: Prisma.DbNull,
+            parsedAt: null,
             uploadedAt: new Date(),
           },
         });
@@ -94,6 +99,14 @@ export async function POST(request: Request) {
         }
 
         return resume;
+      });
+
+      after(async () => {
+        try {
+          await parseAndStoreResume(updated.id);
+        } catch (error) {
+          console.error("Resume parsing failed:", error);
+        }
       });
 
       return NextResponse.json({ resume: updated, replaced: true });
@@ -113,6 +126,14 @@ export async function POST(request: Request) {
         mimeType: validation.mimeType,
         isPrimary: resumeCount === 0,
       },
+    });
+
+    after(async () => {
+      try {
+        await parseAndStoreResume(resume.id);
+      } catch (error) {
+        console.error("Resume parsing failed:", error);
+      }
     });
 
     return NextResponse.json({ resume, replaced: false });

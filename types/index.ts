@@ -55,4 +55,6 @@ export type FaqItem = {
   answer: string;
 };
 
+export * from "./resume";
+
 export * from "./database";

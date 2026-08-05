@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -24,7 +24,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ExtractedResumeData } from "@/components/dashboard/candidate/extracted-resume-data";
 import { validateResumeFile } from "@/lib/resume/validation";
+import type { ParsedResumeData } from "@/types/resume";
+import { parsedResumeDataSchema } from "@/types/resume";
 
 type ResumeItem = {
   id: string;
@@ -36,7 +39,13 @@ type ResumeItem = {
   status: string;
   isPrimary: boolean;
   uploadedAt: Date;
+  parsedData: unknown;
 };
+
+function parseResumeData(value: unknown): ParsedResumeData | null {
+  const parsed = parsedResumeDataSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
 
 type UploadResumePageProps = {
   resumes: ResumeItem[];
@@ -67,6 +76,20 @@ export function UploadResumeClient({ resumes }: UploadResumePageProps) {
 
   const selectedResume =
     resumes.find((resume) => resume.id === selectedPreviewId) ?? null;
+
+  useEffect(() => {
+    const isParsing =
+      selectedResume?.status === "UPLOADED" ||
+      selectedResume?.status === "PROCESSING";
+
+    if (!isParsing) return;
+
+    const interval = window.setInterval(() => {
+      router.refresh();
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [router, selectedResume?.status]);
 
   function resetUploadState() {
     setUploadProgress(0);
@@ -118,8 +141,8 @@ export function UploadResumeClient({ resumes }: UploadResumePageProps) {
 
         setUploadSuccess(
           data.replaced
-            ? "Resume replaced successfully."
-            : "Resume uploaded successfully.",
+            ? "Resume replaced successfully. Parsing your new resume…"
+            : "Resume uploaded successfully. Parsing your resume…",
         );
 
         if (data.resume) {
@@ -285,6 +308,13 @@ export function UploadResumeClient({ resumes }: UploadResumePageProps) {
           )}
         </CardContent>
       </Card>
+
+      {selectedResume && (
+        <ExtractedResumeData
+          status={selectedResume.status}
+          parsedData={parseResumeData(selectedResume.parsedData)}
+        />
+      )}
 
       {selectedResume?.storagePath && (
         <ResumePreview

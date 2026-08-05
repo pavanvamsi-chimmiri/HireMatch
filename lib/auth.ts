@@ -16,6 +16,7 @@ export type AuthUser = {
 };
 
 export function getDashboardPath(role: UserRole): string {
+  if (role === "ADMIN") return "/dashboard/admin";
   return role === "HR" ? "/dashboard/hr" : "/dashboard/candidate";
 }
 
@@ -116,7 +117,7 @@ export async function syncUserFromSupabase(
 }
 
 export function parseUserRole(value: unknown): UserRole | null {
-  if (value === "HR" || value === "CANDIDATE") {
+  if (value === "ADMIN" || value === "HR" || value === "CANDIDATE") {
     return value;
   }
   return null;

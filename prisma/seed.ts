@@ -47,6 +47,20 @@ async function main() {
   });
 
   // ─── Users ─────────────────────────────────────────────────────────────────
+  const adminUser = await prisma.user.create({
+    data: {
+      id: "seed_user_admin",
+      supabaseId: "seed_supabase_admin",
+      email: "admin@hirematch.ai",
+      name: "Platform Admin",
+      role: UserRole.ADMIN,
+      phone: "+1 (415) 555-0000",
+      bio: "HireMatch platform administrator.",
+      profileCompleted: true,
+      isActive: true,
+    },
+  });
+
   const hrUser = await prisma.user.create({
     data: {
       id: "seed_user_hr_sarah",
@@ -718,7 +732,7 @@ async function main() {
   console.log("✅ Seed completed successfully!\n");
   console.log("Created:");
   console.log("  • 1 company");
-  console.log("  • 4 users (1 HR, 3 candidates)");
+  console.log("  • 5 users (1 admin, 1 HR, 3 candidates)");
   console.log("  • 1 HR profile, 3 candidate profiles");
   console.log("  • 3 jobs");
   console.log("  • 3 resumes");

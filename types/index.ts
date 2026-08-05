@@ -64,5 +64,6 @@ export * from "./candidate-search";
 export * from "./hr-rankings";
 export * from "./hr-candidate-profile";
 export * from "./hr-analytics";
+export * from "./admin";
 
 export * from "./database";

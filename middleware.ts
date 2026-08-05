@@ -9,9 +9,9 @@ function isAuthRoute(pathname: string) {
 
 function getUserRole(user: {
   user_metadata?: Record<string, unknown>;
-}): "HR" | "CANDIDATE" | null {
+}): "ADMIN" | "HR" | "CANDIDATE" | null {
   const role = user.user_metadata?.role;
-  if (role === "HR" || role === "CANDIDATE") {
+  if (role === "ADMIN" || role === "HR" || role === "CANDIDATE") {
     return role;
   }
   return null;
@@ -51,6 +51,8 @@ export async function middleware(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     if (!profileCompleted) {
       redirectUrl.pathname = "/profile";
+    } else if (role === "ADMIN") {
+      redirectUrl.pathname = "/dashboard/admin";
     } else if (role === "HR") {
       redirectUrl.pathname = "/dashboard/hr";
     } else if (role === "CANDIDATE") {
@@ -77,12 +79,31 @@ export async function middleware(request: NextRequest) {
 
   if (
     isAuthenticated &&
+    pathname.startsWith("/dashboard/admin") &&
+    role !== "ADMIN"
+  ) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname =
+      role === "HR"
+        ? "/dashboard/hr"
+        : role === "CANDIDATE"
+          ? "/dashboard/candidate"
+          : "/profile";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (
+    isAuthenticated &&
     pathname.startsWith("/dashboard/hr") &&
     role !== "HR"
   ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =
-      role === "CANDIDATE" ? "/dashboard/candidate" : "/profile";
+      role === "ADMIN"
+        ? "/dashboard/admin"
+        : role === "CANDIDATE"
+          ? "/dashboard/candidate"
+          : "/profile";
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -92,7 +113,12 @@ export async function middleware(request: NextRequest) {
     role !== "CANDIDATE"
   ) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = role === "HR" ? "/dashboard/hr" : "/profile";
+    redirectUrl.pathname =
+      role === "ADMIN"
+        ? "/dashboard/admin"
+        : role === "HR"
+          ? "/dashboard/hr"
+          : "/profile";
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -114,7 +140,11 @@ export async function middleware(request: NextRequest) {
   ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname =
-      role === "HR" ? "/dashboard/hr" : "/dashboard/candidate";
+      role === "ADMIN"
+        ? "/dashboard/admin"
+        : role === "HR"
+          ? "/dashboard/hr"
+          : "/dashboard/candidate";
     return NextResponse.redirect(redirectUrl);
   }
 

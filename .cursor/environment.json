@@ -4,12 +4,17 @@
   "terminals": [
     {
       "name": "api",
-      "command": "npm run dev:server"
+      "command": "npm run dev:server",
+      "description": "HireMatch REST API (Express + SQLite) on http://localhost:4000"
     },
     {
       "name": "web",
-      "command": "npm run dev:client"
+      "command": "npm run dev:client",
+      "description": "HireMatch web client (Vite) on http://localhost:5173, proxies /api to the API"
     }
   ],
-  "ports": [4000, 5173]
+  "ports": [
+    { "name": "api", "port": 4000 },
+    { "name": "web", "port": 5173 }
+  ]
 }

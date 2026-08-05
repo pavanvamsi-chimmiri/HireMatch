@@ -1,0 +1,112 @@
+// HireMatch AI — Prisma schema
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  RECRUITER
+  CANDIDATE
+}
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  INTERVIEW
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(CANDIDATE)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company      Company?      @relation(fields: [companyId], references: [id])
+  companyId    String?
+  applications Application[]
+  jobs         Job[]         @relation("JobRecruiter")
+
+  @@map("users")
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  website     String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+  jobs  Job[]
+
+  @@map("companies")
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  requirements String?
+  location     String?
+  salaryMin    Int?
+  salaryMax    Int?
+  status       JobStatus @default(DRAFT)
+  aiMatchScore Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   String
+  recruiter   User    @relation("JobRecruiter", fields: [recruiterId], references: [id])
+  recruiterId String
+
+  applications Application[]
+
+  @@index([companyId])
+  @@index([status])
+  @@map("jobs")
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  coverLetter String?
+  resumeUrl   String?
+  aiScore     Float?
+  aiSummary   String?
+  status      ApplicationStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  job    Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId  String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([jobId, userId])
+  @@index([status])
+  @@map("applications")
+}

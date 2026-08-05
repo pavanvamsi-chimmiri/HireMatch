@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { EmploymentType, JobStatus } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { analyzeAndStoreJob } from "@/services/job-analyzer.service";
 
 export type JobActionState = {
   error?: string;
@@ -147,7 +148,7 @@ export async function createJobAction(
   }
 
   try {
-    await prisma.job.create({
+    const job = await prisma.job.create({
       data: {
         title,
         slug,
@@ -167,6 +168,12 @@ export async function createJobAction(
         publishedAt: status === "OPEN" ? new Date() : null,
       },
     });
+
+    try {
+      await analyzeAndStoreJob(job.id);
+    } catch (error) {
+      console.error("Job description analysis failed:", error);
+    }
 
     revalidatePath("/dashboard/hr");
     revalidatePath("/dashboard/hr/jobs");

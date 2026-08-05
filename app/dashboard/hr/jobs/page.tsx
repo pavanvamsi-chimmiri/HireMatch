@@ -87,7 +87,12 @@ export default async function ManageJobsPage() {
                   <TableRow key={job.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{job.title}</p>
+                        <Link
+                          href={`/dashboard/hr/jobs/${job.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {job.title}
+                        </Link>
                         <p className="text-muted-foreground text-xs">
                           {job.company.name}
                         </p>

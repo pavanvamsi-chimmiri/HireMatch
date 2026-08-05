@@ -213,6 +213,31 @@ async function main() {
       status: JobStatus.OPEN,
       isRemote: true,
       skillsRequired: ["TypeScript", "React", "Node.js", "PostgreSQL", "AWS"],
+      parsedData: {
+        skills: ["TypeScript", "React", "Node.js", "PostgreSQL", "AWS"],
+        technologies: ["Docker", "GraphQL", "CI/CD"],
+        education: ["Bachelor's degree in Computer Science"],
+        experience: {
+          summary: "5+ years",
+          minimumYears: 5,
+          level: "Senior",
+        },
+        responsibilities: [
+          "Design and implement new features",
+          "Mentor junior developers",
+          "Participate in code reviews",
+        ],
+        keywords: [
+          "Full-Stack",
+          "TypeScript",
+          "React",
+          "Node.js",
+          "PostgreSQL",
+          "AWS",
+          "SaaS",
+        ],
+      },
+      parsedAt: new Date(),
       benefits: [
         "Health Insurance",
         "401k",

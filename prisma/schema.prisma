@@ -209,6 +209,8 @@ model Job {
   isRemote         Boolean         @default(false)
   skillsRequired   String[]        @default([])
   benefits         String[]        @default([])
+  parsedData       Json?
+  parsedAt         DateTime?
   applicationDeadline DateTime?
   viewCount        Int             @default(0)
   aiMatchThreshold Float?

@@ -2,10 +2,16 @@ export { getOpenAIClient, DEFAULT_MODEL } from "./client";
 export { PROMPTS } from "./prompts";
 export { parseResumeWithAI, parseResumeWithHeuristics } from "./parse-resume";
 export {
-  analyzeJobWithAI,
-  analyzeJobWithHeuristics,
-  buildJobAnalysisText,
-} from "./analyze-job";
+  createEmbedding,
+  createEmbeddings,
+  cosineSimilarity,
+  keywordSimilarity,
+  EMBEDDING_MODEL,
+} from "./embeddings";
+export {
+  generateMatchExplanation,
+  buildFallbackExplanation,
+} from "./match-explanation";
 export {
   analyzeResumeWithAI,
   analyzeResumeWithHeuristics,

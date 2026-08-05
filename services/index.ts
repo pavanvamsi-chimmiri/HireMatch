@@ -1,5 +1,10 @@
 export { sendEmail, type SendEmailOptions } from "./email.service";
 export {
+  matchCandidatesForJob,
+  getJobCandidateRankings,
+  toRankingView,
+} from "./candidate-matching.service";
+export {
   analyzeAndStoreJob,
   getJobAnalysis,
   toJobAnalysisView,

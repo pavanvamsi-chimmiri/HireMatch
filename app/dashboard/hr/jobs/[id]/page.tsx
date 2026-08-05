@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getJobCandidateRankings } from "@/services/candidate-matching.service";
 import { toJobAnalysisView } from "@/services/job-analyzer.service";
+import { CandidateMatchResults } from "@/components/dashboard/hr/candidate-match-results";
 import { ExtractedJobData } from "@/components/dashboard/hr/extracted-job-data";
+import { RunMatchingButton } from "@/components/dashboard/hr/run-matching-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +48,13 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   }
 
   const analysis = toJobAnalysisView(job.parsedData, job.parsedAt);
+
+  let rankings: Awaited<ReturnType<typeof getJobCandidateRankings>> = [];
+  try {
+    rankings = await getJobCandidateRankings(job.id, user.id);
+  } catch {
+    rankings = [];
+  }
 
   return (
     <div className="space-y-8">
@@ -161,6 +171,21 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
       </div>
 
       <ExtractedJobData analysis={analysis} />
+
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle>AI Candidate Matching</CardTitle>
+          <CardDescription>
+            Compare this job description with all uploaded resumes using
+            embeddings and semantic search.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RunMatchingButton jobId={job.id} />
+        </CardContent>
+      </Card>
+
+      <CandidateMatchResults rankings={rankings} />
     </div>
   );
 }

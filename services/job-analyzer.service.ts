@@ -91,6 +91,20 @@ export async function analyzeAndStoreJob(jobId: string) {
     },
   });
 
+  try {
+    const jobRecord = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { postedById: true },
+    });
+    if (jobRecord) {
+      const { matchCandidatesForJob } =
+        await import("@/services/candidate-matching.service");
+      await matchCandidatesForJob(jobId, jobRecord.postedById);
+    }
+  } catch (error) {
+    console.error("Automatic candidate matching failed:", error);
+  }
+
   return result;
 }
 

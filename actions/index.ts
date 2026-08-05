@@ -19,3 +19,8 @@ export {
   updateJobStatusAction,
   type JobActionState,
 } from "./jobs";
+
+export {
+  runCandidateMatchingAction,
+  type MatchingActionState,
+} from "./matching";

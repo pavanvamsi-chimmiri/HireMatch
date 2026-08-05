@@ -11,6 +11,10 @@ import type {
   HRRankingsData,
   RankingSortOption,
 } from "@/types/hr-rankings";
+import type {
+  HRAnalyticsData,
+  HRAnalyticsMonthlyHiring,
+} from "@/types/hr-analytics";
 import { parsedResumeDataSchema } from "@/types/resume";
 
 function getMonthlyApplicationData(applications: { appliedAt: Date }[]) {
@@ -31,6 +35,103 @@ function getMonthlyApplicationData(applications: { appliedAt: Date }[]) {
   });
 
   return Object.entries(months).map(([month, count]) => ({ month, count }));
+}
+
+function buildLastSixMonthBuckets() {
+  const buckets: { key: string; label: string }[] = [];
+  const now = new Date();
+
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      label: date.toLocaleDateString("en-US", { month: "short" }),
+    });
+  }
+
+  return buckets;
+}
+
+function getMonthlyHiringData(
+  applications: Array<{
+    appliedAt: Date;
+    status: ApplicationStatus;
+  }>,
+): HRAnalyticsMonthlyHiring[] {
+  const buckets = buildLastSixMonthBuckets();
+
+  return buckets.map(({ key, label }) => {
+    const monthApps = applications.filter((application) => {
+      const appKey = `${application.appliedAt.getFullYear()}-${application.appliedAt.getMonth()}`;
+      return appKey === key;
+    });
+
+    return {
+      month: label,
+      applications: monthApps.length,
+      shortlisted: monthApps.filter((app) => app.status === "SHORTLISTED")
+        .length,
+      rejected: monthApps.filter((app) => app.status === "REJECTED").length,
+      selected: monthApps.filter((app) => app.status === "OFFERED").length,
+    };
+  });
+}
+
+function formatSkillLabel(skill: string) {
+  const trimmed = skill.trim();
+  if (!trimmed) return trimmed;
+  return trimmed
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getTopSkills(
+  applications: Awaited<ReturnType<typeof getHRApplicants>>,
+  jobs: Awaited<ReturnType<typeof getHRJobs>>,
+) {
+  const skillCounts = new Map<string, { label: string; count: number }>();
+
+  function addSkill(rawSkill: string, weight = 1) {
+    const key = rawSkill.trim().toLowerCase();
+    if (!key) return;
+
+    const existing = skillCounts.get(key);
+    if (existing) {
+      existing.count += weight;
+      return;
+    }
+
+    skillCounts.set(key, {
+      label: formatSkillLabel(rawSkill),
+      count: weight,
+    });
+  }
+
+  for (const application of applications) {
+    for (const skill of application.candidate.candidateProfile?.skills ?? []) {
+      addSkill(skill);
+    }
+
+    const parsed = parsedResumeDataSchema.safeParse(
+      application.resume?.parsedData,
+    );
+    if (parsed.success) {
+      for (const skill of parsed.data.skills) addSkill(skill);
+      for (const skill of parsed.data.technologies) addSkill(skill);
+    }
+  }
+
+  for (const job of jobs) {
+    for (const skill of job.skillsRequired) {
+      addSkill(skill, Math.max(1, job._count.applications));
+    }
+  }
+
+  return Array.from(skillCounts.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
+    .map(({ label, count }) => ({ skill: label, count }));
 }
 
 export async function getHRDashboardData(userId: string) {
@@ -179,7 +280,7 @@ export async function searchCandidates(userId: string, query?: string) {
   return candidates;
 }
 
-export async function getHRAnalytics(userId: string) {
+export async function getHRAnalytics(userId: string): Promise<HRAnalyticsData> {
   const [applications, jobs, rankings] = await Promise.all([
     getHRApplicants(userId),
     getHRJobs(userId),
@@ -193,24 +294,49 @@ export async function getHRAnalytics(userId: string) {
     }),
   ]);
 
-  const funnel = {
-    applied: applications.length,
-    reviewing: applications.filter((a) => a.status === "REVIEWING").length,
-    shortlisted: applications.filter((a) => a.status === "SHORTLISTED").length,
-    interview: applications.filter((a) => a.status === "INTERVIEW").length,
-    offered: applications.filter((a) => a.status === "OFFERED").length,
+  const summary = {
+    applications: applications.length,
+    shortlisted: applications.filter((app) => app.status === "SHORTLISTED")
+      .length,
+    rejected: applications.filter((app) => app.status === "REJECTED").length,
+    selected: applications.filter((app) => app.status === "OFFERED").length,
   };
 
-  const applicationsByJob = jobs.map((job) => ({
-    jobTitle: job.title,
-    count: job._count.applications,
-  }));
+  const funnel = {
+    applied: applications.length,
+    reviewing: applications.filter((app) => app.status === "REVIEWING").length,
+    shortlisted: summary.shortlisted,
+    interview: applications.filter((app) => app.status === "INTERVIEW").length,
+    selected: summary.selected,
+    rejected: summary.rejected,
+  };
+
+  const mostAppliedJobs = jobs
+    .map((job) => ({
+      jobTitle: job.title,
+      count: job._count.applications,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
 
   return {
+    summary,
     funnel,
-    applicationsByJob,
-    rankings: rankings.slice(0, 10),
-    monthlyApplications: getMonthlyApplicationData(applications),
+    monthlyHiring: getMonthlyHiringData(applications),
+    mostAppliedJobs,
+    topSkills: getTopSkills(applications, jobs),
+    rankings: rankings.slice(0, 6).map((ranking) => ({
+      id: ranking.id,
+      score: ranking.score,
+      aiSummary: ranking.aiSummary,
+      candidate: {
+        name: ranking.candidate.name,
+        email: ranking.candidate.email,
+      },
+      job: {
+        title: ranking.job.title,
+      },
+    })),
   };
 }
 

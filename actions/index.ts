@@ -13,3 +13,9 @@ export {
   setPrimaryResumeAction,
   type ResumeActionState,
 } from "./resume";
+
+export {
+  createJobAction,
+  updateJobStatusAction,
+  type JobActionState,
+} from "./jobs";

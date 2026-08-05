@@ -4,7 +4,7 @@ import { env } from "@/lib/env";
 
 export async function createSupabaseServerClient() {
   if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    throw new Error("Missing Supabase environment variables");
+    return null;
   }
 
   const cookieStore = await cookies();

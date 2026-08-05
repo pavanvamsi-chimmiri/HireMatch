@@ -11,8 +11,7 @@ datasource db {
 }
 
 enum UserRole {
-  ADMIN
-  RECRUITER
+  HR
   CANDIDATE
 }
 
@@ -34,13 +33,17 @@ enum ApplicationStatus {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      UserRole @default(CANDIDATE)
-  avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  supabaseId       String   @unique
+  email            String   @unique
+  name             String?
+  role             UserRole
+  avatarUrl        String?
+  phone            String?
+  bio              String?
+  profileCompleted Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   company      Company?      @relation(fields: [companyId], references: [id])
   companyId    String?

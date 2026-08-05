@@ -82,7 +82,13 @@ export default async function HRAnalyticsPage() {
         <CardHeader>
           <CardTitle>Top AI-Ranked Candidates</CardTitle>
           <CardDescription>
-            Highest scoring candidates across your open roles.
+            Highest scoring candidates across your open roles.{" "}
+            <a
+              href="/dashboard/hr/rankings"
+              className="font-medium text-blue-600 hover:underline dark:text-cyan-400"
+            >
+              View all rankings
+            </a>
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">

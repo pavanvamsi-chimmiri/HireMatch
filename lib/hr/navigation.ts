@@ -6,6 +6,7 @@ import {
   PlusCircle,
   Search,
   Settings,
+  Trophy,
   Users,
 } from "lucide-react";
 
@@ -29,6 +30,11 @@ export const hrNavItems = [
     title: "Applicants",
     href: "/dashboard/hr/applicants",
     icon: Users,
+  },
+  {
+    title: "Candidate Rankings",
+    href: "/dashboard/hr/rankings",
+    icon: Trophy,
   },
   {
     title: "Candidate Search",

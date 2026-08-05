@@ -59,5 +59,6 @@ export * from "./resume";
 export * from "./resume-analysis";
 export * from "./job-analysis";
 export * from "./candidate-match";
+export * from "./hr-rankings";
 
 export * from "./database";

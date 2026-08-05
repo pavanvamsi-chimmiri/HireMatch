@@ -1,5 +1,13 @@
 import type { ApplicationStatus, JobStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { candidateMatchFactorsSchema } from "@/types/candidate-match";
+import type {
+  HRRankingFilters,
+  HRRankingRow,
+  HRRankingSpotlights,
+  HRRankingsData,
+  RankingSortOption,
+} from "@/types/hr-rankings";
 
 function getMonthlyApplicationData(applications: { appliedAt: Date }[]) {
   const months: Record<string, number> = {};
@@ -215,4 +223,155 @@ export async function getHRSettings(userId: string) {
   ]);
 
   return { hrProfile, settings };
+}
+
+function sortRankings(
+  rankings: HRRankingRow[],
+  sort: RankingSortOption,
+): HRRankingRow[] {
+  const sorted = [...rankings];
+
+  switch (sort) {
+    case "rank":
+      return sorted.sort((a, b) => a.rank - b.rank);
+    case "skill":
+      return sorted.sort(
+        (a, b) => (b.factors?.skillMatch ?? 0) - (a.factors?.skillMatch ?? 0),
+      );
+    case "ats":
+      return sorted.sort(
+        (a, b) => (b.factors?.atsMatch ?? 0) - (a.factors?.atsMatch ?? 0),
+      );
+    case "experience":
+      return sorted.sort(
+        (a, b) =>
+          (b.factors?.experienceMatch ?? 0) - (a.factors?.experienceMatch ?? 0),
+      );
+    case "newest":
+      return sorted.sort((a, b) => {
+        const aDate = a.application?.appliedAt ?? a.createdAt;
+        const bDate = b.application?.appliedAt ?? b.createdAt;
+        return bDate.getTime() - aDate.getTime();
+      });
+    case "overall":
+    default:
+      return sorted.sort((a, b) => b.score - a.score);
+  }
+}
+
+function computeSpotlights(rankings: HRRankingRow[]): HRRankingSpotlights {
+  if (rankings.length === 0) {
+    return {
+      topCandidate: null,
+      bestSkillMatch: null,
+      highestAts: null,
+      newestCandidate: null,
+    };
+  }
+
+  return {
+    topCandidate: [...rankings].sort((a, b) => b.score - a.score)[0] ?? null,
+    bestSkillMatch:
+      [...rankings].sort(
+        (a, b) => (b.factors?.skillMatch ?? 0) - (a.factors?.skillMatch ?? 0),
+      )[0] ?? null,
+    highestAts:
+      [...rankings].sort(
+        (a, b) => (b.factors?.atsMatch ?? 0) - (a.factors?.atsMatch ?? 0),
+      )[0] ?? null,
+    newestCandidate:
+      [...rankings].sort((a, b) => {
+        const aDate = a.application?.appliedAt ?? a.createdAt;
+        const bDate = b.application?.appliedAt ?? b.createdAt;
+        return bDate.getTime() - aDate.getTime();
+      })[0] ?? null,
+  };
+}
+
+function mapRankingRow(
+  ranking: Awaited<
+    ReturnType<
+      typeof prisma.candidateRanking.findMany<{
+        include: {
+          job: { include: { company: true } };
+          candidate: { include: { candidateProfile: true } };
+          application: { select: { appliedAt: true } };
+        };
+      }>
+    >
+  >[number],
+): HRRankingRow {
+  const parsedFactors = candidateMatchFactorsSchema.safeParse(ranking.factors);
+
+  return {
+    id: ranking.id,
+    rank: ranking.rank,
+    score: ranking.score,
+    aiSummary: ranking.aiSummary,
+    factors: parsedFactors.success ? parsedFactors.data : null,
+    isShortlisted: ranking.isShortlisted,
+    createdAt: ranking.createdAt,
+    candidate: ranking.candidate,
+    job: ranking.job,
+    application: ranking.application,
+  };
+}
+
+export async function getHRRankings(
+  userId: string,
+  filters: HRRankingFilters = {},
+): Promise<HRRankingsData> {
+  const [rankings, jobs] = await Promise.all([
+    prisma.candidateRanking.findMany({
+      where: { job: { postedById: userId } },
+      include: {
+        job: { include: { company: true } },
+        candidate: { include: { candidateProfile: true } },
+        application: { select: { appliedAt: true } },
+      },
+    }),
+    prisma.job.findMany({
+      where: { postedById: userId },
+      select: { id: true, title: true },
+      orderBy: { title: "asc" },
+    }),
+  ]);
+
+  const rows = rankings.map(mapRankingRow);
+  const spotlights = computeSpotlights(rows);
+
+  let filtered = rows;
+
+  if (filters.jobId) {
+    filtered = filtered.filter((row) => row.job.id === filters.jobId);
+  }
+
+  if (filters.shortlisted) {
+    filtered = filtered.filter((row) => row.isShortlisted);
+  }
+
+  if (filters.minScore != null && filters.minScore > 0) {
+    filtered = filtered.filter((row) => row.score >= filters.minScore!);
+  }
+
+  if (filters.q) {
+    const query = filters.q.toLowerCase();
+    filtered = filtered.filter(
+      (row) =>
+        row.candidate.name?.toLowerCase().includes(query) ||
+        row.candidate.email.toLowerCase().includes(query) ||
+        row.job.title.toLowerCase().includes(query) ||
+        row.job.company.name.toLowerCase().includes(query),
+    );
+  }
+
+  const sorted = sortRankings(filtered, filters.sort ?? "overall");
+
+  return {
+    rankings: sorted,
+    jobs,
+    spotlights,
+    totalCount: rows.length,
+    filteredCount: sorted.length,
+  };
 }

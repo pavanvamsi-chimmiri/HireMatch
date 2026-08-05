@@ -26,6 +26,7 @@ export async function runCandidateMatchingAction(
     revalidatePath("/dashboard/hr/jobs");
     revalidatePath("/dashboard/hr/applicants");
     revalidatePath("/dashboard/hr/analytics");
+    revalidatePath("/dashboard/hr/rankings");
     revalidatePath("/dashboard/hr");
 
     return {

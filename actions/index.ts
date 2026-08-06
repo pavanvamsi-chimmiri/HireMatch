@@ -26,3 +26,10 @@ export {
 } from "./matching";
 
 export { applyToJobAction, type ApplyJobActionState } from "./applications";
+
+export {
+  updateHRProfileAction,
+  updateHRCompanyAction,
+  updateHRHiringPreferencesAction,
+  type HRSettingsActionState,
+} from "./hr-settings";

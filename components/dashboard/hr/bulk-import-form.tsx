@@ -58,6 +58,11 @@ export function BulkImportForm({ jobs }: BulkImportFormProps) {
         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
           Imported {state.importedCount ?? 0} candidate
           {(state.importedCount ?? 0) === 1 ? "" : "s"}.
+          {state.resumesAttachedCount
+            ? ` ${state.resumesAttachedCount} resume${
+                state.resumesAttachedCount === 1 ? "" : "s"
+              } attached.`
+            : ""}
           {state.skippedCount ? ` ${state.skippedCount} skipped.` : ""}{" "}
           <Link href="/dashboard/hr/applicants" className="underline">
             View applicants
@@ -81,15 +86,35 @@ export function BulkImportForm({ jobs }: BulkImportFormProps) {
           <CardTitle>CSV Format</CardTitle>
           <CardDescription>
             Required columns: <strong>Name</strong> and <strong>Email</strong>.
-            Optional: Phone, LinkedIn URL, Naukri URL, Notes. Resumes are not
-            included in CSV — import profiles first, then upload resumes from
-            the candidate profile if needed.
+            Optional: Phone, LinkedIn URL, Naukri URL, Notes. You can also
+            upload a ZIP of resumes named by email (e.g.{" "}
+            <code className="text-xs">jane@example.com.pdf</code>).
           </CardDescription>
         </CardHeader>
         <CardContent>
           <pre className="bg-muted overflow-x-auto rounded-xl p-4 text-xs">
             {sampleCsv}
           </pre>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/50">
+        <CardHeader>
+          <CardTitle>Resume ZIP (optional)</CardTitle>
+          <CardDescription>
+            Upload a ZIP file containing resumes named with candidate emails.
+            Supported formats: PDF, DOC, DOCX. Example filenames:{" "}
+            <code className="text-xs">jane@example.com.pdf</code>,{" "}
+            <code className="text-xs">john.smith@company.com.docx</code>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Input
+            id="resumeZip"
+            name="resumeZip"
+            type="file"
+            accept=".zip,application/zip,application/x-zip-compressed"
+          />
         </CardContent>
       </Card>
 

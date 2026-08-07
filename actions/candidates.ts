@@ -9,6 +9,7 @@ import {
   resolveProfileUrls,
 } from "@/lib/candidates/import";
 import { parseCandidateCsv } from "@/lib/import/csv-parser";
+import { parseResumeZip } from "@/lib/import/resume-zip";
 
 export type CandidateImportActionState = {
   success?: boolean;
@@ -16,6 +17,7 @@ export type CandidateImportActionState = {
   applicationId?: string;
   importedCount?: number;
   skippedCount?: number;
+  resumesAttachedCount?: number;
   errors?: string[];
 };
 
@@ -125,6 +127,7 @@ export async function bulkImportCandidatesAction(
 
   const jobId = formData.get("jobId")?.toString().trim();
   const csvFile = formData.get("csvFile");
+  const resumeZipFile = formData.get("resumeZip");
 
   if (!jobId) {
     return { error: "Select a job for this import." };
@@ -145,14 +148,30 @@ export async function bulkImportCandidatesAction(
     };
   }
 
+  let resumeMap = new Map<
+    string,
+    Awaited<ReturnType<typeof parseResumeZip>>["resumes"][number]
+  >();
+  const zipWarnings: string[] = [];
+
+  if (resumeZipFile instanceof File && resumeZipFile.size > 0) {
+    const zipBuffer = Buffer.from(await resumeZipFile.arrayBuffer());
+    const zipResult = parseResumeZip(zipBuffer);
+    resumeMap = zipResult.resumeMap;
+    zipWarnings.push(...zipResult.errors);
+  }
+
   let importedCount = 0;
   let skippedCount = 0;
-  const rowErrors: string[] = [...parsed.errors];
+  let resumesAttachedCount = 0;
+  const rowErrors: string[] = [...parsed.errors, ...zipWarnings];
 
   for (const row of parsed.rows) {
     const profileUrl = row.linkedinUrl ?? row.naukriUrl;
     const detectedSource = detectProfileSource(profileUrl);
     const source: ApplicationSource = detectedSource ?? "CSV_BULK";
+    const normalizedEmail = row.email.trim().toLowerCase();
+    const matchedResume = resumeMap.get(normalizedEmail);
 
     try {
       await importCandidateForJob({
@@ -166,11 +185,22 @@ export async function bulkImportCandidatesAction(
           naukriUrl: row.naukriUrl,
           profileUrl,
         },
+        resume: matchedResume
+          ? {
+              fileName: matchedResume.fileName,
+              fileSize: matchedResume.fileSize,
+              mimeType: matchedResume.mimeType,
+              buffer: matchedResume.buffer,
+            }
+          : null,
         source,
         sourceUrl: profileUrl,
         hrNotes: row.notes,
       });
       importedCount += 1;
+      if (matchedResume) {
+        resumesAttachedCount += 1;
+      }
     } catch (error) {
       skippedCount += 1;
       rowErrors.push(
@@ -199,6 +229,7 @@ export async function bulkImportCandidatesAction(
     success: true,
     importedCount,
     skippedCount,
+    resumesAttachedCount,
     errors: rowErrors.length > 0 ? rowErrors.slice(0, 10) : undefined,
   };
 }

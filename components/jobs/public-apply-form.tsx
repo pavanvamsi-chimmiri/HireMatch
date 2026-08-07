@@ -49,7 +49,6 @@ export function PublicApplyForm({
     <form
       action={formAction}
       className="space-y-4"
-      encType="multipart/form-data"
     >
       <input type="hidden" name="jobId" value={jobId} />
 

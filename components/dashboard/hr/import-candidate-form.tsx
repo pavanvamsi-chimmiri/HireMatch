@@ -42,7 +42,6 @@ export function ImportCandidateForm({ jobs }: ImportCandidateFormProps) {
     <form
       action={formAction}
       className="space-y-6"
-      encType="multipart/form-data"
     >
       {state.error && (
         <div className="border-destructive/20 bg-destructive/5 text-destructive rounded-xl border px-4 py-3 text-sm">

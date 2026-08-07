@@ -20,6 +20,15 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const sourceLabels: Record<string, string> = {
+  DIRECT: "Direct",
+  PUBLIC: "Public link",
+  HR_IMPORT: "HR import",
+  CSV_BULK: "CSV import",
+  LINKEDIN: "LinkedIn",
+  NAUKRI: "Naukri",
+};
+
 const statusStyles: Record<string, string> = {
   PENDING: "bg-muted text-muted-foreground",
   REVIEWING: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
@@ -68,6 +77,7 @@ export default async function ApplicantsPage() {
                 <TableRow>
                   <TableHead>Candidate</TableHead>
                   <TableHead>Job</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>AI Score</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Applied</TableHead>
@@ -97,6 +107,11 @@ export default async function ApplicantsPage() {
                           {application.job.company.name}
                         </p>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {sourceLabels[application.source] ?? application.source}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {application.aiScore !== null ? (

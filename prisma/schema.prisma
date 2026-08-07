@@ -89,6 +89,15 @@ enum SettingScope {
   SYSTEM
 }
 
+enum ApplicationSource {
+  DIRECT
+  PUBLIC
+  HR_IMPORT
+  CSV_BULK
+  LINKEDIN
+  NAUKRI
+}
+
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -134,6 +143,7 @@ model CandidateProfile {
   education         Json?
   certifications    String[]        @default([])
   linkedinUrl       String?
+  naukriUrl         String?
   portfolioUrl      String?
   githubUrl         String?
   desiredSalaryMin  Int?
@@ -243,6 +253,8 @@ model Application {
   id           String            @id @default(cuid())
   coverLetter  String?
   status       ApplicationStatus @default(PENDING)
+  source       ApplicationSource @default(DIRECT)
+  sourceUrl    String?
   aiScore      Float?
   aiSummary    String?
   hrNotes      String?

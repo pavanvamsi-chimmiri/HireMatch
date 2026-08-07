@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Briefcase,
+  FileUp,
   LayoutDashboard,
   Mail,
   PlusCircle,
@@ -25,6 +26,11 @@ export const hrNavItems = [
     title: "Manage Jobs",
     href: "/dashboard/hr/jobs",
     icon: Briefcase,
+  },
+  {
+    title: "Import Candidates",
+    href: "/dashboard/hr/import",
+    icon: FileUp,
   },
   {
     title: "Applicants",

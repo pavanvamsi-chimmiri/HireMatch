@@ -36,3 +36,10 @@ export {
   bulkImportCandidatesAction,
   type CandidateImportActionState,
 } from "./candidates";
+
+export {
+  updateHRProfileAction,
+  updateHRCompanyAction,
+  updateHRHiringPreferencesAction,
+  type HRSettingsActionState,
+} from "./hr-settings";

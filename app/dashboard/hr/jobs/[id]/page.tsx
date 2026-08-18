@@ -8,6 +8,7 @@ import { toJobAnalysisView } from "@/services/job-analyzer.service";
 import { CandidateMatchResults } from "@/components/dashboard/hr/candidate-match-results";
 import { ExtractedJobData } from "@/components/dashboard/hr/extracted-job-data";
 import { RunMatchingButton } from "@/components/dashboard/hr/run-matching-button";
+import { ShareJobLink } from "@/components/dashboard/hr/share-job-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { buildPublicJobUrl } from "@/lib/jobs/public";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +91,12 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           </div>
         </div>
       </div>
+
+      <ShareJobLink
+        publicUrl={buildPublicJobUrl(job.company.slug, job.slug)}
+        jobTitle={job.title}
+        isOpen={job.status === "OPEN"}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="border-border/50 lg:col-span-2">

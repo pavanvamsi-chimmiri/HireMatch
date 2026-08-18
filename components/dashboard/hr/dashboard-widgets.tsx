@@ -275,6 +275,12 @@ export function HRQuickActions({ companyName }: QuickActionsProps) {
       gradient: "from-indigo-600/10 to-violet-600/10 border-indigo-500/20",
     },
     {
+      title: "Import Candidates",
+      description: "Add candidates from LinkedIn, Naukri, or CSV exports.",
+      href: "/dashboard/hr/import",
+      gradient: "from-cyan-600/10 to-blue-600/10 border-cyan-500/20",
+    },
+    {
       title: "Email Candidates",
       description: "Reach out to shortlisted or active applicants in bulk.",
       href: "/dashboard/hr/email",

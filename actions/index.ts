@@ -25,4 +25,21 @@ export {
   type MatchingActionState,
 } from "./matching";
 
-export { applyToJobAction, type ApplyJobActionState } from "./applications";
+export {
+  applyToJobAction,
+  applyToPublicJobAction,
+  type ApplyJobActionState,
+} from "./applications";
+
+export {
+  importCandidateAction,
+  bulkImportCandidatesAction,
+  type CandidateImportActionState,
+} from "./candidates";
+
+export {
+  updateHRProfileAction,
+  updateHRCompanyAction,
+  updateHRHiringPreferencesAction,
+  type HRSettingsActionState,
+} from "./hr-settings";

@@ -218,12 +218,16 @@ export async function applyToPublicJobAction(
 
   try {
     const candidate = await findOrCreateCandidateUser({ email, name, phone });
-    const resume = await uploadCandidateResume(candidate.id, {
-      fileName: resumeFile.name,
-      fileSize: resumeFile.size,
-      mimeType: resumeFile.type || "application/octet-stream",
-      buffer: Buffer.from(await resumeFile.arrayBuffer()),
-    });
+    const resume = await uploadCandidateResume(
+      candidate.id,
+      {
+        fileName: resumeFile.name,
+        fileSize: resumeFile.size,
+        mimeType: resumeFile.type || "application/octet-stream",
+        buffer: Buffer.from(await resumeFile.arrayBuffer()),
+      },
+      { awaitParse: true },
+    );
 
     const application = await createImportedApplication({
       jobId: job.id,

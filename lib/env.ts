@@ -29,3 +29,11 @@ export const serverEnv = serverEnvSchema.parse({
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
 });
+
+export function isDatabaseConfigured() {
+  return Boolean(serverEnv.DATABASE_URL?.trim());
+}
+
+export function getDatabaseSetupMessage() {
+  return "Database is not configured. Add DATABASE_URL to your .env file, run `npx prisma migrate deploy`, then restart the dev server.";
+}

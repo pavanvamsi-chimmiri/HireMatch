@@ -154,6 +154,7 @@ export async function findOrCreateCandidateUser(input: CandidateImportInput) {
 export async function uploadCandidateResume(
   candidateId: string,
   resume: ImportResumeInput,
+  options?: { awaitParse?: boolean },
 ) {
   const validation = validateResumeFile(
     resume.fileName,
@@ -184,13 +185,17 @@ export async function uploadCandidateResume(
     },
   });
 
-  after(async () => {
-    try {
-      await parseAndStoreResume(created.id);
-    } catch (error) {
-      console.error("Resume parsing failed for imported candidate:", error);
-    }
-  });
+  if (options?.awaitParse) {
+    await parseAndStoreResume(created.id);
+  } else {
+    after(async () => {
+      try {
+        await parseAndStoreResume(created.id);
+      } catch (error) {
+        console.error("Resume parsing failed for imported candidate:", error);
+      }
+    });
+  }
 
   return created;
 }
@@ -294,7 +299,9 @@ export async function importCandidateForJob(input: {
 
   let resumeId: string | null = null;
   if (input.resume) {
-    const resume = await uploadCandidateResume(user.id, input.resume);
+    const resume = await uploadCandidateResume(user.id, input.resume, {
+      awaitParse: true,
+    });
     resumeId = resume.id;
   }
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Briefcase, MapPin } from "lucide-react";
 import { PublicApplyForm } from "@/components/jobs/public-apply-form";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -56,21 +57,48 @@ function formatSalary(
 
 export async function generateMetadata({ params }: PublicJobPageProps) {
   const { companySlug, jobSlug } = await params;
-  const job = await getPublicJob(companySlug, jobSlug);
 
-  if (!job) {
-    return { title: "Job Not Found" };
+  try {
+    const job = await getPublicJob(companySlug, jobSlug);
+    if (!job) {
+      return { title: "Job Not Found" };
+    }
+
+    return {
+      title: `${job.title} at ${job.company.name} | ${env.NEXT_PUBLIC_APP_NAME}`,
+      description: job.description.slice(0, 160),
+    };
+  } catch {
+    return { title: `Job | ${env.NEXT_PUBLIC_APP_NAME}` };
   }
-
-  return {
-    title: `${job.title} at ${job.company.name} | ${env.NEXT_PUBLIC_APP_NAME}`,
-    description: job.description.slice(0, 160),
-  };
 }
 
 export default async function PublicJobPage({ params }: PublicJobPageProps) {
   const { companySlug, jobSlug } = await params;
-  const job = await getPublicJob(companySlug, jobSlug);
+
+  let job;
+  try {
+    job = await getPublicJob(companySlug, jobSlug);
+  } catch {
+    return (
+      <div className="bg-background flex min-h-screen items-center justify-center p-6">
+        <Card className="border-border/50 max-w-lg">
+          <CardHeader>
+            <CardTitle>Database not configured</CardTitle>
+            <CardDescription>
+              Copy `.env.example` to `.env`, add your Supabase DATABASE_URL, run
+              migrations, then restart the dev server.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link href="/">Back to home</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!job) {
     notFound();

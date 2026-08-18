@@ -46,10 +46,7 @@ export function PublicApplyForm({
   }
 
   return (
-    <form
-      action={formAction}
-      className="space-y-4"
-    >
+    <form action={formAction} className="space-y-4">
       <input type="hidden" name="jobId" value={jobId} />
 
       {state.error && (

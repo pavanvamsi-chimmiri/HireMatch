@@ -39,10 +39,7 @@ export function ImportCandidateForm({ jobs }: ImportCandidateFormProps) {
   const openJobs = jobs.filter((job) => job.status === "OPEN");
 
   return (
-    <form
-      action={formAction}
-      className="space-y-6"
-    >
+    <form action={formAction} className="space-y-6">
       {state.error && (
         <div className="border-destructive/20 bg-destructive/5 text-destructive rounded-xl border px-4 py-3 text-sm">
           {state.error}

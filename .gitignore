@@ -44,3 +44,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+hr-automation/api/hr_automation.db
+hr-automation/api/data/
+
+# local downloadable packs
+dist/

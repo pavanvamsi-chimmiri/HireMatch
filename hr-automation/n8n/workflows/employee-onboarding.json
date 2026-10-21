@@ -1,0 +1,67 @@
+{
+  "name": "Employee Onboarding Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hr-new-hire",
+        "responseMode": "lastNode"
+      },
+      "id": "WebhookNewHire",
+      "name": "New Hire Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://hr-automation-api:8000/api/v1/onboarding/start",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"employee_name\": \"{{ $json.body.employee_name }}\",\n  \"employee_email\": \"{{ $json.body.employee_email }}\",\n  \"role\": \"{{ $json.body.role }}\",\n  \"department\": \"{{ $json.body.department }}\",\n  \"start_date\": \"{{ $json.body.start_date }}\",\n  \"manager_email\": \"{{ $json.body.manager_email }}\"\n}"
+      },
+      "id": "StartOnboarding",
+      "name": "Start Onboarding (FastAPI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://hr-automation-api:8000/api/v1/webhooks/n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-n8n-secret",
+              "value": "change-me-in-production"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"onboarding.started\",\n  \"data\": {{ $json }}\n}"
+      },
+      "id": "NotifySystems",
+      "name": "Notify Downstream Systems",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 300]
+    }
+  ],
+  "connections": {
+    "New Hire Webhook": {
+      "main": [[{ "node": "Start Onboarding (FastAPI)", "type": "main", "index": 0 }]]
+    },
+    "Start Onboarding (FastAPI)": {
+      "main": [[{ "node": "Notify Downstream Systems", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

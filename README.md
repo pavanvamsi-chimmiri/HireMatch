@@ -39,6 +39,12 @@ AI-powered recruitment platform that matches top talent with the right roles fas
 
 See [`prisma/SCHEMA.md`](prisma/SCHEMA.md) for the full database schema.
 
+### HR process automation (Python + n8n)
+
+For workflow automation (resume screening, interview scheduling, employee onboarding), see [`hr-automation/README.md`](hr-automation/README.md).
+
+**Downloadable local pack (no Supabase):** unzip `hr-automation`, run `./start.sh` (or `start.bat` on Windows), open [http://localhost:8000](http://localhost:8000). Maintainers can build a shareable zip with `cd hr-automation && ./pack.sh`.
+
 ---
 
 ## Getting Started (Local)

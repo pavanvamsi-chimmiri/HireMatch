@@ -1,0 +1,47 @@
+services:
+  hr-automation-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:-change-me-in-production}
+      DATABASE_URL: sqlite+aiosqlite:////app/data/hr_automation.db
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5678,http://localhost:8000
+    volumes:
+      - api_data:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:1.72.1
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: Asia/Kolkata
+      # From inside Docker, call the API by service name:
+      # http://hr-automation-api:8000
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      hr-automation-api:
+        condition: service_healthy
+
+volumes:
+  n8n_data:
+  api_data:

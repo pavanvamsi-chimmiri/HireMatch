@@ -1,0 +1,86 @@
+{
+  "name": "HR Resume Screening Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hr-new-application",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "WebhookTrigger",
+      "name": "New Application Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/screening/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"candidate_name\": \"{{ $json.body.candidate_name }}\",\n  \"candidate_email\": \"{{ $json.body.candidate_email }}\",\n  \"job_title\": \"{{ $json.body.job_title }}\",\n  \"job_description\": \"{{ $json.body.job_description }}\",\n  \"resume_text\": \"{{ $json.body.resume_text }}\",\n  \"min_score_threshold\": 60\n}"
+      },
+      "id": "ScreenResume",
+      "name": "Screen Resume (FastAPI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.recommendation }}",
+              "operation": "equal",
+              "value2": "shortlist"
+            }
+          ]
+        }
+      },
+      "id": "IfShortlist",
+      "name": "Shortlisted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [780, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/interviews/schedule",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"candidate_name\": \"{{ $('Screen Resume (FastAPI)').item.json.candidate_name }}\",\n  \"candidate_email\": \"{{ $('Screen Resume (FastAPI)').item.json.candidate_email }}\",\n  \"job_title\": \"{{ $('Screen Resume (FastAPI)').item.json.job_title }}\",\n  \"interviewer_email\": \"hr@company.com\",\n  \"preferred_slots\": [\"{{ $now.plus({days: 2}).toISO() }}\"]\n}"
+      },
+      "id": "ScheduleInterview",
+      "name": "Schedule Interview",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 220]
+    }
+  ],
+  "connections": {
+    "New Application Webhook": {
+      "main": [[{ "node": "Screen Resume (FastAPI)", "type": "main", "index": 0 }]]
+    },
+    "Screen Resume (FastAPI)": {
+      "main": [[{ "node": "Shortlisted?", "type": "main", "index": 0 }]]
+    },
+    "Shortlisted?": {
+      "main": [
+        [{ "node": "Schedule Interview", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

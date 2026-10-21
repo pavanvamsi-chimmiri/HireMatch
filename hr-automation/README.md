@@ -62,8 +62,19 @@ Read `HOW_TO_RUN.txt` inside the zip.
 
 | Mode | Need |
 |------|------|
-| Default (`./start.sh`) | **Python 3.11+** |
+| Default (`./start.sh`) | **Python 3.11, 3.12, or 3.13** (not 3.14 yet) |
 | Docker (`./start.sh --docker`) | **Docker Desktop** |
+
+### Mac tip (if you see `pydantic-core` / Python 3.14 errors)
+
+```bash
+brew install python@3.12
+cd hr-automation
+rm -rf api/.venv
+./start.sh
+```
+
+`start.sh` prefers `python3.12` / `python3.13` / `python3.11` automatically.
 
 ---
 

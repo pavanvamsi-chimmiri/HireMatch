@@ -44,7 +44,8 @@ cat > "$OUT_DIR/HOW_TO_RUN.txt" <<'EOF'
 HireMatch HR Automation — Local Pack
 ====================================
 
-Requirements: Python 3.11+  (OR Docker Desktop)
+Requirements: Python 3.11 / 3.12 / 3.13  (OR Docker Desktop)
+IMPORTANT: Python 3.14 is NOT supported yet (pydantic-core build fails).
 
 Quick start (no Docker)
 -----------------------
@@ -54,10 +55,16 @@ macOS / Linux:
   3. Run:  ./start.sh
   4. Open: http://localhost:8000
 
+  If you only have Python 3.14 on Mac:
+    brew install python@3.12
+    rm -rf api/.venv
+    ./start.sh
+
 Windows:
   1. Unzip this folder
   2. Double-click start.bat
   3. Open: http://localhost:8000
+  Install Python 3.12 from python.org if needed (not 3.14).
 
 With Docker (API + n8n)
 -----------------------

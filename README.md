@@ -41,7 +41,9 @@ See [`prisma/SCHEMA.md`](prisma/SCHEMA.md) for the full database schema.
 
 ### HR process automation (Python + n8n)
 
-For workflow automation (resume screening, interview scheduling, employee onboarding), see [`hr-automation/README.md`](hr-automation/README.md). It includes a **FastAPI** service and importable **n8n** workflows.
+For workflow automation (resume screening, interview scheduling, employee onboarding), see [`hr-automation/README.md`](hr-automation/README.md).
+
+**Downloadable local pack (no Supabase):** unzip `hr-automation`, run `./start.sh` (or `start.bat` on Windows), open [http://localhost:8000](http://localhost:8000). Maintainers can build a shareable zip with `cd hr-automation && ./pack.sh`.
 
 ---
 

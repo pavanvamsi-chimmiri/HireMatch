@@ -16,7 +16,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/onboarding/start",
+        "url": "http://hr-automation-api:8000/api/v1/onboarding/start",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"employee_name\": \"{{ $json.body.employee_name }}\",\n  \"employee_email\": \"{{ $json.body.employee_email }}\",\n  \"role\": \"{{ $json.body.role }}\",\n  \"department\": \"{{ $json.body.department }}\",\n  \"start_date\": \"{{ $json.body.start_date }}\",\n  \"manager_email\": \"{{ $json.body.manager_email }}\"\n}"
@@ -30,7 +30,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/webhooks/n8n",
+        "url": "http://hr-automation-api:8000/api/v1/webhooks/n8n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

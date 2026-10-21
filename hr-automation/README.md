@@ -1,51 +1,101 @@
-# HR Process Automation (Python + FastAPI + n8n)
+# HireMatch HR Automation — Local Pack
 
-Intelligent automation layer for HireMatch-style HR workflows:
+Downloadable pack for **resume screening**, **interview scheduling**, and **employee onboarding**.
 
-- **Resume screening** (AI or heuristic scoring)
-- **Interview scheduling** (slot selection + meeting link)
-- **Employee onboarding** (auto-generated task checklist)
+Runs as a **local website** on your machine. No Supabase. No cloud account required for the demo.
 
-Built with **FastAPI**, **SQLAlchemy**, and **n8n** orchestration.
+---
+
+## Download & run (anyone)
+
+### Option A — From this repo
+
+```bash
+# Clone (or download ZIP from GitHub → Code → Download ZIP)
+git clone https://github.com/pavanvamsi-chimmiri/HireMatch.git
+cd HireMatch/hr-automation
+
+chmod +x start.sh
+./start.sh
+```
+
+Open **http://localhost:8000**
+
+**Windows:** double-click `start.bat` instead of `./start.sh`.
+
+### Option B — Packaged zip (share with teammates)
+
+Maintainers can build a zip:
+
+```bash
+cd hr-automation
+chmod +x pack.sh
+./pack.sh
+# → dist/hirematch-hr-automation-local-YYYYMMDD.zip
+```
+
+Recipients:
+
+1. Unzip  
+2. Run `./start.sh` (Mac/Linux) or `start.bat` (Windows)  
+3. Open http://localhost:8000  
+
+Read `HOW_TO_RUN.txt` inside the zip.
+
+---
+
+## What you get
+
+| URL | Purpose |
+|-----|---------|
+| http://localhost:8000 | **Local website** — screen / schedule / onboard |
+| http://localhost:8000/docs | Swagger API explorer |
+| http://localhost:8000/health | Health check |
+| http://localhost:5678 | n8n (only with `./start.sh --docker`) |
+
+- Works **offline** with heuristic scoring if `OPENAI_API_KEY` is empty  
+- Optional AI scoring when you set `OPENAI_API_KEY` in `.env`
+
+---
+
+## Requirements
+
+| Mode | Need |
+|------|------|
+| Default (`./start.sh`) | **Python 3.11+** |
+| Docker (`./start.sh --docker`) | **Docker Desktop** |
+
+---
+
+## Docker (API + n8n)
+
+```bash
+./start.sh --docker
+# or: docker compose up --build
+```
+
+Import workflows from `n8n/workflows/*.json` into n8n.  
+Inside Docker, workflows call `http://hr-automation-api:8000` (already set in the JSON).
+
+Stop:
+
+```bash
+docker compose down
+```
+
+---
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  A[HireMatch / ATS / Forms] --> B[n8n Workflows]
-  B --> C[FastAPI HR Automation API]
-  C --> D[(SQLite/Postgres)]
-  C --> E[OpenAI Optional]
-  B --> F[Email / Slack / Calendar]
+  U[Browser localhost:8000] --> A[FastAPI + Local UI]
+  N[n8n optional] --> A
+  A --> D[(SQLite)]
+  A --> O[OpenAI optional]
 ```
 
-## Quick start
-
-### 1. API (local)
-
-```bash
-cd hr-automation/api
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp ../.env.example .env
-uvicorn app.main:app --reload --port 8000
-```
-
-Open API docs: http://localhost:8000/docs
-
-### 2. n8n + API (Docker)
-
-```bash
-cd hr-automation
-cp .env.example .env
-docker compose up --build
-```
-
-- API: http://localhost:8000
-- n8n: http://localhost:5678
-
-Import workflows from `n8n/workflows/*.json`.
+---
 
 ## API endpoints
 
@@ -61,75 +111,32 @@ Import workflows from `n8n/workflows/*.json`.
 | Onboarding tasks | GET | `/api/v1/onboarding/tasks/{email}` |
 | n8n callback | POST | `/api/v1/webhooks/n8n` |
 
-## Example: resume screening
+---
+
+## Smoke test
+
+With the server running:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/screening/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "candidate_name": "Pavanvamsi Chimmiri",
-    "candidate_email": "pavan@example.com",
-    "job_title": "Healthcare AI Documentation Specialist",
-    "job_description": "AI-driven documentation, NABH research, dashboards",
-    "resume_text": "Experienced in AI automation, Python, FastAPI, HR workflows",
-    "min_score_threshold": 60
-  }'
+bash scripts/smoke-test.sh
 ```
 
-## Example: interview scheduling
+---
 
-```bash
-curl -X POST http://localhost:8000/api/v1/interviews/schedule \
-  -H "Content-Type: application/json" \
-  -d '{
-    "candidate_name": "Pavanvamsi Chimmiri",
-    "candidate_email": "pavan@example.com",
-    "job_title": "Healthcare AI Documentation Specialist",
-    "interviewer_email": "hr@hirematch.test",
-    "preferred_slots": ["2026-08-20T10:00:00", "2026-08-21T14:00:00"]
-  }'
-```
+## Environment
 
-## Example: employee onboarding
+Copy `.env.example` → `.env` (done automatically by `start.sh`).
 
-```bash
-curl -X POST http://localhost:8000/api/v1/onboarding/start \
-  -H "Content-Type: application/json" \
-  -d '{
-    "employee_name": "Pavanvamsi Chimmiri",
-    "employee_email": "pavan@example.com",
-    "role": "HR Automation Engineer",
-    "department": "People Operations",
-    "start_date": "2026-09-01"
-  }'
-```
+| Variable | Required | Notes |
+|----------|----------|--------|
+| `OPENAI_API_KEY` | No | Enables AI scoring |
+| `N8N_WEBHOOK_SECRET` | For n8n webhooks | Header `x-n8n-secret` |
+| `DATABASE_URL` | No | Defaults to local SQLite |
+| `CORS_ORIGINS` | No | Comma-separated origins |
 
-## n8n integration
+---
 
-1. Start API and n8n (`docker compose up`).
-2. Import `n8n/workflows/resume-screening-pipeline.json`.
-3. Import `n8n/workflows/employee-onboarding.json`.
-4. Activate workflows and use webhook URLs:
-   - `POST http://localhost:5678/webhook/hr-new-application`
-   - `POST http://localhost:5678/webhook/hr-new-hire`
+## HireMatch Next.js app (separate)
 
-Set `N8N_WEBHOOK_SECRET` in `.env` and send header `x-n8n-secret` on `/api/v1/webhooks/n8n`.
-
-## HireMatch integration (optional)
-
-Point n8n HTTP nodes at your HireMatch app when a candidate applies or is imported:
-
-1. Trigger n8n from HireMatch (webhook or scheduled poll).
-2. n8n calls FastAPI screening.
-3. If `recommendation === shortlist`, n8n schedules interview and notifies HR.
-
-## Environment variables
-
-See `.env.example`.
-
-## Tests
-
-```bash
-cd hr-automation/api
-bash ../scripts/smoke-test.sh
-```
+The full HireMatch dashboard (auth, jobs, applicants) is the Next.js app at the repo root and needs Supabase.  
+This **local pack** is the standalone automation layer — share the zip when you only need HR workflows + a simple UI.

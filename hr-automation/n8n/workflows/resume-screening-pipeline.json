@@ -17,7 +17,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/screening/analyze",
+        "url": "http://hr-automation-api:8000/api/v1/screening/analyze",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"candidate_name\": \"{{ $json.body.candidate_name }}\",\n  \"candidate_email\": \"{{ $json.body.candidate_email }}\",\n  \"job_title\": \"{{ $json.body.job_title }}\",\n  \"job_description\": \"{{ $json.body.job_description }}\",\n  \"resume_text\": \"{{ $json.body.resume_text }}\",\n  \"min_score_threshold\": 60\n}"
@@ -49,7 +49,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/interviews/schedule",
+        "url": "http://hr-automation-api:8000/api/v1/interviews/schedule",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"candidate_name\": \"{{ $('Screen Resume (FastAPI)').item.json.candidate_name }}\",\n  \"candidate_email\": \"{{ $('Screen Resume (FastAPI)').item.json.candidate_email }}\",\n  \"job_title\": \"{{ $('Screen Resume (FastAPI)').item.json.job_title }}\",\n  \"interviewer_email\": \"hr@company.com\",\n  \"preferred_slots\": [\"{{ $now.plus({days: 2}).toISO() }}\"]\n}"

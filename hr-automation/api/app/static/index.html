@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HireMatch HR Automation — Local Pack</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="top">
+        <div>
+          <p class="brand">HireMatch HR Automation</p>
+          <h1>Local pack</h1>
+          <p class="lede">
+            Screen resumes, schedule interviews, and start onboarding — running on your machine.
+          </p>
+        </div>
+        <div class="status" id="status">
+          <span class="dot"></span>
+          <span id="status-text">Checking API…</span>
+        </div>
+      </header>
+
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="screening" type="button">Resume screening</button>
+        <button class="tab" data-tab="interview" type="button">Interview scheduling</button>
+        <button class="tab" data-tab="onboarding" type="button">Employee onboarding</button>
+      </nav>
+
+      <main>
+        <section class="panel active" id="panel-screening">
+          <form id="form-screening">
+            <div class="grid">
+              <label>Candidate name <input name="candidate_name" required value="Alex Rivera" /></label>
+              <label>Candidate email <input name="candidate_email" type="email" required value="alex@example.com" /></label>
+              <label>Job title <input name="job_title" required value="Automation Engineer" /></label>
+              <label>Min score <input name="min_score_threshold" type="number" min="0" max="100" value="60" /></label>
+            </div>
+            <label
+              >Job description
+              <textarea name="job_description" rows="4" required>
+Python, FastAPI, n8n, HR automation, resume screening, interview scheduling.</textarea
+              >
+            </label>
+            <label
+              >Resume text
+              <textarea name="resume_text" rows="5" required>
+Built FastAPI services and n8n workflows for recruiting. Strong Python, SQLAlchemy, and ops automation.</textarea
+              >
+            </label>
+            <button type="submit">Analyze resume</button>
+          </form>
+          <pre class="out" id="out-screening">Results appear here.</pre>
+        </section>
+
+        <section class="panel" id="panel-interview">
+          <form id="form-interview">
+            <div class="grid">
+              <label>Candidate name <input name="candidate_name" required value="Alex Rivera" /></label>
+              <label>Candidate email <input name="candidate_email" type="email" required value="alex@example.com" /></label>
+              <label>Job title <input name="job_title" required value="Automation Engineer" /></label>
+              <label>Interviewer email <input name="interviewer_email" type="email" required value="hr@example.com" /></label>
+            </div>
+            <label
+              >Preferred slots (ISO, one per line)
+              <textarea name="preferred_slots" rows="3" required>
+2030-01-15T10:00:00
+2030-01-16T14:00:00</textarea
+              >
+            </label>
+            <button type="submit">Schedule interview</button>
+          </form>
+          <pre class="out" id="out-interview">Results appear here.</pre>
+        </section>
+
+        <section class="panel" id="panel-onboarding">
+          <form id="form-onboarding">
+            <div class="grid">
+              <label>Employee name <input name="employee_name" required value="Jordan Lee" /></label>
+              <label>Employee email <input name="employee_email" type="email" required value="jordan@example.com" /></label>
+              <label>Role <input name="role" required value="People Ops Analyst" /></label>
+              <label>Department <input name="department" required value="HR" /></label>
+              <label>Start date <input name="start_date" type="date" required value="2030-02-01" /></label>
+              <label>Manager email <input name="manager_email" type="email" value="manager@example.com" /></label>
+            </div>
+            <button type="submit">Start onboarding</button>
+          </form>
+          <pre class="out" id="out-onboarding">Results appear here.</pre>
+        </section>
+      </main>
+
+      <footer>
+        <a href="/docs" target="_blank" rel="noreferrer">API docs</a>
+        <span>·</span>
+        <a href="/health" target="_blank" rel="noreferrer">Health</a>
+        <span>·</span>
+        <span>Optional n8n UI: http://localhost:5678</span>
+      </footer>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

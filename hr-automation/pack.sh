@@ -13,15 +13,27 @@ ZIP="$DIST/${NAME}.zip"
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
-rsync -a \
-  --exclude '.venv' \
-  --exclude '__pycache__' \
-  --exclude '*.pyc' \
-  --exclude '*.db' \
-  --exclude '.env' \
-  --exclude 'n8n_data' \
-  --exclude '.DS_Store' \
-  "$ROOT/" "$OUT_DIR/"
+if command -v rsync >/dev/null 2>&1; then
+  rsync -a \
+    --exclude '.venv' \
+    --exclude '__pycache__' \
+    --exclude '*.pyc' \
+    --exclude '*.db' \
+    --exclude '.env' \
+    --exclude 'n8n_data' \
+    --exclude '.DS_Store' \
+    "$ROOT/" "$OUT_DIR/"
+else
+  # Portable fallback when rsync is unavailable
+  python3 - <<PY
+import shutil
+from pathlib import Path
+src = Path("$ROOT")
+dst = Path("$OUT_DIR")
+ignore = shutil.ignore_patterns(".venv", "__pycache__", "*.pyc", "*.db", ".env", "n8n_data", ".DS_Store")
+shutil.copytree(src, dst, dirs_exist_ok=True, ignore=ignore)
+PY
+fi
 
 # Friendly entry files at pack root
 cp "$ROOT/start.sh" "$OUT_DIR/start.sh"

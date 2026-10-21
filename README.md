@@ -39,6 +39,10 @@ AI-powered recruitment platform that matches top talent with the right roles fas
 
 See [`prisma/SCHEMA.md`](prisma/SCHEMA.md) for the full database schema.
 
+### HR process automation (Python + n8n)
+
+For workflow automation (resume screening, interview scheduling, employee onboarding), see [`hr-automation/README.md`](hr-automation/README.md). It includes a **FastAPI** service and importable **n8n** workflows.
+
 ---
 
 ## Getting Started (Local)
